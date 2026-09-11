@@ -32,6 +32,28 @@ prototypes/doodle-journal/
 
 The prototype is **not** a stand-alone deliverable and should not be sent onward by itself. It renders a red "No data has been collected" panel above the fold precisely because the HTML is the artifact most likely to be forwarded without its brief, and the numbers on it are evidence *against* the concept — not results.
 
+## Setup on a fresh clone — one required step
+
+`.specify/feature.json` is **not in this repo**, and cannot be: spec-kit's own `.specify/.gitignore` treats it as machine-local state. Without it, `get_feature_paths` hard-errors, `setup-plan.sh` exits 1, and `/speckit-plan` dies at step 1 of its Outline — before it ever reaches the constitution or the gate. So after cloning, run one of:
+
+```bash
+printf '{\n  "feature_directory": "."\n}\n' > .specify/feature.json
+```
+
+or set it per-shell instead:
+
+```bash
+export SPECIFY_FEATURE_DIRECTORY=.
+```
+
+Either points spec-kit at the repo root as the feature directory, which is where this project's `spec.md` / `plan.md` / `tasks.md` would live. Then:
+
+```bash
+./check-gates.sh          # exits 1 — gates are red on purpose
+```
+
+This is worth understanding rather than just running, because it is the subtlest of the five failures this repo exists to document: **a gate that is never reached is not a gate.** The gate check can be perfectly configured and still never fire, because the workflow dies upstream of it. Nothing about that failure looks like a gate failure — it looks like a path error.
+
 ## Gate state
 
 Red, for real reasons. `./check-gates.sh` exits 1. `[A]`+`[?]` = **58.6%** of tagged claims (17 of 29, grep-verified) — nearly twice the 30% threshold. Nothing here is checked to make the script go green.
