@@ -8,32 +8,43 @@ Second wiring test for the three-gate framework (`ux.md` / `vision.md` / `design
 
 ## How this is structured — read this first
 
-One canonical document, three derived checklists, four scripts.
+Each document is canonical for one domain. Three scripts check the joins.
 
 ```
-Intent Specs/doodle-journal.md   ← CANONICAL. 16 sections. All reasoning lives here.
-                                    §5 UX intent = UXI-01..UXI-14 (experience principles,
-                                    desired feeling, key user states, accessibility)
+Intent Specs/doodle-journal.md   ← CANONICAL for this feature's intent. 16 sections.
+                                    §5 UX intent = UXI-01..UXI-14
                                     §13 open questions -> points at OPEN.md
                                     §14 decision log = the single record of decisions
 
-ux.md / vision.md / design.md    ← DERIVED. Mechanical checklists only, no reasoning.
-                                    Every criterion carries traces_to: an id above,
-                                    and verified_by: how it was settled.
+ux.md       ← CANONICAL for the research corpus, positioning, audience, research plan.
+              §§1-8 content, §9 = Gate 1 acceptance criteria.
 
-OPEN.md                          ← the register: every open question, typed
-                                    HUMAN / RESEARCH / ACCEPTED
+design.md   ← CANONICAL for the design system (Itten), the interaction canon, and the
+              usability/accessibility standard. §§1-8 content, §9 = Gate 3 criteria.
+
+vision.md   ← DERIVED checklist only. Gate 2. Direction and scope stay in the intent spec.
+
+OPEN.md     ← the register: every open question, typed HUMAN / RESEARCH / ACCEPTED
 ```
+
+**Why this shape, after two passes at it.** The first pass made all three gate files thin derived checklists, on the reasoning that judgment belongs in one canonical place. That was right about *this feature's* intent and wrong about everything else: a design system and a research corpus are not derived from a feature spec — they outlive it, and they apply to the next prototype too. So they are canonical in their own right, and each still ends in the `## 9. Acceptance Criteria` block the scripts read. Different domains, not duplication.
 
 | script | question it answers | exit |
 |---|---|---|
-| `./check-gates.sh` | are the gate boxes ticked? | 1 if any open |
+| `./check-gates.sh` | are the gate boxes ticked? | 1 if any open, or if a gate file has no parsable criteria |
 | `./check-blocked.sh` | are we waiting on a *person*? | 2 if a HUMAN row stands |
-| `./check-trace.sh` | have the derived checklists drifted from intent? | 4 on a broken or orphaned trace |
+| `./check-trace.sh` | have the criteria drifted from what they claim to enforce? | 4 on a broken or orphaned trace |
 
-The exit codes differ on purpose, so a caller can tell "a box is unticked" from "a person owes us an answer" from "the checklist no longer matches the intent."
+The exit codes differ on purpose, so a caller can tell "a box is unticked" from "a person owes us an answer" from "a criterion points at something that no longer exists."
 
-**Why split it this way.** The prose in a gate file added nothing the intent spec doesn't do better — but the gate *checkboxes* did real work, and a script reading them stopped a live `/speckit-plan` run. So judgment lives in the intent spec, where a human reads it; verification lives in the checklists, where a script settles it. `check-trace.sh` validates both directions and caught two orphaned UX requirements on its first run — intents that were written down and enforced by nothing.
+`scripts/contrast.py` is not a gate script — it computes the WCAG contrast table in `design.md` ds:1.1, so those ratios are reproducible rather than asserted.
+
+**Two silent failures this restructure caused, both caught by the scripts and worth knowing about:**
+
+1. `check-gates.sh` anchored on `/^## Acceptance Criteria/`. Once the heading became `## 9. Acceptance Criteria` the awk matched nothing, counted zero unchecked boxes, and printed a confident **PASS**. A false green is worse than a false red. The script now accepts an optional section number and **fails when a gate file yields zero parsable criteria**, rather than treating "I found nothing" as "nothing is wrong."
+2. `check-trace.sh` resolved every `§N` against the intent spec. Once `ux.md` and `design.md` had their own §1–§8, `§5` was ambiguous — and it resolved against the intent spec either way, so a wrong pointer would have passed. Local references are now `ds:N.N` and cannot collide. Both directions are validated, and the checks were tested against deliberately broken pointers before being trusted.
+
+**Reference syntax**, used in every `traces_to:` field: `§N` = intent spec · `ds:N.N` = a section of the file itself · `UXI-##` = an intent spec §5 requirement · `CLR-##` / `C-##` / `SHD-##` = a design-system rule · `H-##` / `R-##` / `A-##` = an `OPEN.md` row.
 
 ## Reading order
 
@@ -42,9 +53,9 @@ The exit codes differ on purpose, so a caller can tell "a box is unticked" from 
 3. `scout/00-index.md` — evidence index; **read `scout/03` first**, it is load-bearing and it cuts against the concept
 4. `briefs/doodle-journal.brief.md` — 29 tagged claims, the falsifiability table, the Critic Pass 1 resolutions
 5. `OPEN.md` — every unresolved thing, typed HUMAN / RESEARCH / ACCEPTED
-6. `ux.md` — Gate 1 derived checklist (8 of 10 checked)
+6. `ux.md` — the research corpus, positioning, audience and research plan; Gate 1 at §9 (18 of 24 checked). **ds:4.3 is the load-bearing section and it argues against the concept**
 7. `vision.md` — Gate 2 derived checklist (9 of 11 checked)
-8. `design.md` — Gate 3 derived checklist (17 of 26 checked)
+8. `design.md` — the Itten design system, interaction canon and accessibility standard; Gate 3 at §9 (18 of 36 checked)
 9. `spec.md` — the spec-kit-shaped view: prioritized stories, `FR-###`, `SC-###`
 10. `prototypes/doodle-journal/critic-pass-1.md` → `critic-pass-2.md` — the review record
 11. `prototypes/doodle-journal/doodle-journal.html` — the Tier 1 prototype. Open it directly in a browser. No model call and no backend; it does load Space Mono and Kalam from Google Fonts, which is its only external request
@@ -93,7 +104,9 @@ This is worth understanding rather than just running, because it is the subtlest
 
 ## Gate state
 
-Red, for real reasons. `./check-gates.sh` exits 1 — 2 open in Gate 1, 2 in Gate 2, 9 in Gate 3. `[A]`+`[?]` = **58.6%** of tagged claims (17 of 29, grep-verified) — nearly twice the 30% threshold. Nothing here is checked to make the script go green.
+Red, for real reasons. `./check-gates.sh` exits 1 — **6 open in Gate 1, 2 in Gate 2, 18 in Gate 3.** `[A]`+`[?]` = **58.6%** of tagged claims (17 of 29, grep-verified) — nearly twice the 30% threshold. Nothing here is checked to make the script go green.
+
+The open count went **up** when `ux.md` and `design.md` gained real content: Gate 1 from 2 open to 6, Gate 3 from 9 to 18. None of those are new defects. Writing down a measured contrast table surfaced that two palette colours fail AA on the light ground (2.10:1 and 1.49:1) and that nothing had ever checked. Writing down a positioning statement and three personas turned four unstated assumptions into four testable claims nobody has tested. **A gate can only catch what it names**, so naming more made it redder — and those are the same event.
 
 ## How this repo deliberately differs from `test-repo-nav-update`
 
@@ -110,4 +123,4 @@ Each difference is a fix for something that broke over there:
 
 ## What to break
 
-Check the two open boxes in `ux.md` without doing the work they describe, then run `./check-gates.sh` and `/speckit-plan`. The script will go green and planning will proceed. That is the honest limit of this design: the gate is only as good as the honesty of whoever ticks the box. The script checks that a box is ticked — it cannot check that the claim beside it is true. Only a human reading the evidence can do that, which is the finding, not a bug to fix.
+Check the six open boxes in `ux.md` without doing the work they describe, then run `./check-gates.sh` and `/speckit-plan`. The script will go green and planning will proceed. That is the honest limit of this design: the gate is only as good as the honesty of whoever ticks the box. The script checks that a box is ticked — it cannot check that the claim beside it is true. Only a human reading the evidence can do that, which is the finding, not a bug to fix.
