@@ -1,0 +1,6 @@
+.DS_Store
+
+# NOTE: .claude/ is deliberately NOT ignored here.
+# In test-repo-nav-update it was, which meant the speckit skills — the layer that
+# actually reads .specify/extensions.yml and runs the gate check — were absent from
+# the pushed repo. Enforcement has to travel with the repo or it is not enforcement.

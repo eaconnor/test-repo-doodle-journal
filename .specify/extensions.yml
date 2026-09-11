@@ -1,0 +1,38 @@
+# Mechanical enforcement for the three-gate framework.
+#
+# Every speckit-* skill reads this file in its Pre-Execution Checks and is
+# instructed to EXECUTE_COMMAND for each hook registered with `optional: false`,
+# then wait for the result before continuing. That instruction is what makes the
+# gate check mechanical rather than a norm sitting in constitution prose.
+#
+# Deliberately NO `condition:` field on these hooks — the skills are told to SKIP
+# any hook that declares a non-empty condition and leave evaluation to a
+# HookExecutor that does not exist in this project. A condition here would
+# silently disable the gate.
+
+version: 1
+
+hooks:
+  before_plan:
+    - extension: three-gate
+      command: check-gates
+      description: "Blocks planning until Gates 1-3 have zero unchecked acceptance criteria."
+      prompt: "Run ./check-gates.sh from the repo root. If it exits non-zero, stop and report BLOCKED. Do not plan."
+      optional: false
+      enabled: true
+
+  before_implement:
+    - extension: three-gate
+      command: check-gates
+      description: "Blocks implementation until Gates 1-3 have zero unchecked acceptance criteria."
+      prompt: "Run ./check-gates.sh from the repo root. If it exits non-zero, stop and report BLOCKED. Do not implement."
+      optional: false
+      enabled: true
+
+  before_tasks:
+    - extension: three-gate
+      command: check-gates
+      description: "Blocks task breakdown until Gates 1-3 have zero unchecked acceptance criteria."
+      prompt: "Run ./check-gates.sh from the repo root. If it exits non-zero, stop and report BLOCKED. Do not break down tasks."
+      optional: false
+      enabled: true

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doodle Journal — Tier 1 / Concept</title>
+
+<!-- Space Mono + Kalam are required by the locked design system (CLAUDE.md §11).
+     The build originally shipped them as font-family declarations only, with no
+     loader, because it was told to be fully self-contained with zero network
+     calls — so both silently fell back to Comic Sans / Courier for every reader.
+     "Zero network" and "webfonts loaded" cannot both be true in one file, and the
+     locked design system wins that conflict. Fallback stacks below still apply if
+     this is opened offline. No other external request is made by this file. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --vermillion:#D8472B; --ultramarine:#1F3C96; --ochre:#C99A2E; --violet:#5B3A7E;
+  --green-earth:#5E7A3F; --cadmium:#E8B93A; --ink:#1a1612; --paper:#efe7d6;
+  --card:#f7f0df; --grid:rgba(26,22,18,.055); --line:var(--ink);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:28px 28px;
+  color:var(--ink);
+  font-family:'Kalam','Comic Sans MS','Segoe Print',cursive,sans-serif;
+  line-height:1.5;
+}
+h1,h2,h3,h4,.ui,button,.mono,.badge,.tag,label,.entry-meta,.btn{
+  font-family:'Space Mono','Courier New',monospace;
+}
+button{cursor:pointer;}
+.wrap{max-width:1400px;margin:0 auto;}
+
+/* ===== Fidelity banner ===== */
+.fidelity-banner{
+  background:var(--ultramarine); color:var(--paper);
+  border-bottom:6px solid var(--ink);
+  padding:14px 28px; font-size:14px; letter-spacing:.02em;
+  display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline;
+}
+.fidelity-banner strong{color:var(--cadmium); font-size:16px;}
+.fidelity-banner .fid-note{opacity:.92;}
+
+/* ===== StoryWriter warning block ===== */
+.storywriter{
+  background:var(--card);
+  border:4px solid var(--vermillion);
+  box-shadow:6px 6px 0 var(--line);
+  margin:28px; padding:20px 24px;
+}
+.storywriter h2{margin:0 0 10px; color:var(--vermillion); font-size:18px;}
+.storywriter .sw-stats{display:flex; flex-wrap:wrap; gap:16px; margin:14px 0;}
+.sw-stat{
+  background:var(--paper); border:2px solid var(--ink); padding:10px 14px; min-width:150px;
+}
+.sw-stat .num{font-size:26px; font-weight:bold; color:var(--vermillion); display:block;}
+.sw-stat .lbl{font-size:12px; display:block; margin-top:4px;}
+.storywriter .sw-source{font-size:12px; margin-top:12px; opacity:.85;}
+.storywriter p{margin:8px 0;}
+
+/* ===== layout ===== */
+.layout{display:flex; gap:0; margin:0 28px 28px;}
+.main-col{flex:1 1 auto; min-width:0;}
+.rail{
+  flex:0 0 360px;
+  background:var(--card);
+  border-left:6px solid var(--violet);
+  box-shadow:-6px 6px 0 var(--line);
+  padding:20px;
+  margin-left:28px;
+  align-self:flex-start;
+}
+@media (max-width:1000px){
+  .layout{flex-direction:column;}
+  .rail{margin-left:0; margin-top:28px; flex:1 1 auto;}
+}
+
+/* ===== headings / composer ===== */
+h1.title{font-size:22px; margin:0; letter-spacing:.02em;}
+.subtitle{font-size:13px; opacity:.8; margin-top:4px;}
+.section-heading{
+  font-size:15px; text-transform:uppercase; letter-spacing:.05em;
+  border-bottom:3px solid var(--ink); padding-bottom:6px; margin:32px 0 16px;
+}
+
+.composer{
+  background:var(--card); border:3px solid var(--ink);
+  box-shadow:6px 6px 0 var(--line); padding:20px; margin-top:16px;
+}
+.mode-toggle{display:flex; gap:0; margin:12px 0;}
+.mode-btn{
+  border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+  padding:8px 18px; font-size:13px;
+}
+.mode-btn.active{background:var(--ochre); color:var(--ink); font-weight:bold;}
+.mode-btn:first-child{border-right:none;}
+textarea{
+  width:100%; font-family:'Kalam','Comic Sans MS',cursive,sans-serif; font-size:15px;
+  border:2px solid var(--ink); background:var(--paper); padding:10px; resize:vertical;
+  min-height:80px; color:var(--ink);
+}
+.record-btn{
+  border:2px solid var(--vermillion); background:var(--paper); color:var(--vermillion);
+  padding:10px 18px; font-size:13px; font-weight:bold;
+}
+.record-btn.recording{background:var(--vermillion); color:var(--paper);}
+.mock-note{font-size:11px; color:var(--vermillion); margin:6px 0 10px; font-family:'Space Mono',monospace;}
+.waveform{display:flex; align-items:center; gap:3px; height:36px; margin:10px 0;}
+.waveform span{
+  display:inline-block; width:4px; background:var(--ultramarine);
+  animation:wf 0.6s ease-in-out infinite alternate;
+}
+@keyframes wf{0%{height:6px;} 100%{height:32px;}}
+.btn{
+  border:2px solid var(--ink); background:var(--ink); color:var(--paper);
+  padding:10px 18px; font-size:13px; font-weight:bold; box-shadow:3px 3px 0 var(--line);
+}
+.btn:disabled{opacity:.4; cursor:not-allowed; box-shadow:none;}
+.btn-ghost{background:var(--paper); color:var(--ink);}
+.btn-warn{background:var(--vermillion); color:var(--paper); border-color:var(--ink);}
+.btn-small{padding:6px 12px; font-size:12px;}
+.btn-tiny{padding:5px 10px; font-size:11px; background:var(--paper); color:var(--vermillion); border-color:var(--vermillion); box-shadow:none; margin-top:14px;}
+
+/* ===== entry cards ===== */
+.entry{
+  background:var(--card); border:3px solid var(--ink);
+  box-shadow:6px 6px 0 var(--line); padding:20px; margin:20px 0;
+}
+.entry-meta{display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;}
+.tag{
+  background:var(--cadmium); color:var(--ink); font-size:11px; padding:3px 8px;
+  border:1px solid var(--ink); font-weight:bold;
+}
+.entry-name{font-size:13px; font-weight:bold;}
+.entry-body{display:flex; gap:24px; flex-wrap:wrap;}
+.entry-text{flex:1 1 280px; min-width:240px;}
+.entry-text h4{margin:0 0 6px; font-size:12px; text-transform:uppercase; opacity:.7;}
+.entry-text p{font-size:16px; margin:0;}
+.doodle-pane{flex:1 1 300px; min-width:260px; border-left:2px dashed var(--ink); padding-left:20px;}
+@media (max-width:640px){.doodle-pane{border-left:none; padding-left:0; border-top:2px dashed var(--ink); padding-top:14px;}}
+.consent-row{font-size:12px; margin-bottom:10px; display:flex; gap:8px; align-items:flex-start;}
+.consent-row input{margin-top:3px;}
+.doodle-canvas{
+  background:var(--paper); border:2px solid var(--ink); width:150px; height:150px;
+  display:flex; align-items:center; justify-content:center; margin:10px 0;
+}
+.doodle-controls{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
+.describe-box{background:var(--paper); border:2px solid var(--violet); padding:12px; margin-top:6px;}
+.describe-box label{display:block; font-size:11px; margin-bottom:6px; color:var(--violet);}
+.desc-saved{font-size:12px; color:var(--green-earth); margin-top:6px; font-weight:bold;}
+.discard-note{font-size:13px; color:var(--vermillion); font-style:italic; margin-top:8px;}
+
+/* ===== rail ===== */
+.badge{
+  display:inline-block; background:var(--violet); color:var(--paper);
+  padding:6px 14px; font-size:12px; font-weight:bold; border:2px solid var(--ink);
+  box-shadow:3px 3px 0 var(--line);
+}
+.rail h2{font-size:16px; margin:18px 0 8px;}
+.rail p{font-size:13px;}
+.dual-block{display:flex; flex-direction:column; gap:10px; margin:10px 0 20px;}
+.dual-item{border:2px solid var(--ink); padding:10px; font-size:12px; background:var(--paper);}
+.dual-item.nailed{border-color:var(--green-earth);}
+.dual-item.hurt{border-color:var(--vermillion);}
+.dual-item strong{display:block; margin-bottom:4px; font-size:12px;}
+.card-route{
+  border:2px solid var(--ink); background:var(--paper); padding:12px; margin-bottom:14px; font-size:12px;
+}
+.card-route h3{margin:0 0 8px; font-size:13px; background:var(--ochre); display:inline-block; padding:2px 8px;}
+.card-route .roi{border-top:1px dashed var(--ink); margin-top:8px; padding-top:8px;}
+.card-route .roi div{margin:2px 0;}
+.card-route p{margin:4px 0;}
+
+footer{padding:20px 28px; font-size:11px; opacity:.7;}
+</style>
+</head>
+<body>
+
+<div class="fidelity-banner">
+  <strong>TIER 1 · CONCEPT</strong>
+  <span class="fid-note">Mocked pipeline test. No model call, no live speech-to-text, no image generation. All doodles below are pre-drawn <strong>[TEST DATA]</strong>, hand-authored, chosen from a fixed pool of four. Nothing on this screen has been user-tested.</span>
+</div>
+
+<div class="wrap">
+
+<header style="padding:24px 28px 0;">
+  <h1 class="title">Doodle Journal — research probe</h1>
+  <p class="subtitle">Testing <strong>one half of one named unknown</strong>: whether a hand-drawn doodle style avoids the <em>unsettling</em> reaction the nearest primary study measured (#13b). It does not address the more damaging half — whether any generated image can render what the person actually said (#13a). Not a claim that this concept works.</p>
+</header>
+
+<div role="note" aria-label="No data has been collected"
+     style="margin:0 28px 28px; padding:16px 20px; background:var(--card);
+            border:2px solid var(--vermillion); border-left:10px solid var(--vermillion);
+            box-shadow:6px 6px 0 var(--line);">
+  <p style="margin:0 0 8px; font-family:'Space Mono',ui-monospace,monospace; font-size:12px;
+            letter-spacing:.08em; text-transform:uppercase; color:var(--vermillion); font-weight:700;">
+    No data has been collected
+  </p>
+  <p style="margin:0; font-family:Kalam,'Comic Sans MS',cursive,sans-serif; font-size:15px; line-height:1.5;">
+    <strong>Zero participants. Zero reaction data. No user testing has been run on this concept, at any fidelity.</strong>
+    This is a separate statement from the fidelity badge above: "this is a concept" and "nobody has tested this"
+    are two different claims, and only the second one tells you what this screen is worth as evidence.
+    Of the six success criteria in the brief, SC-001 and SC-002 — the two that would actually measure whether
+    a doodle lands with a person — are <strong>deferred to Tier 2 and cannot be measured against this build at all</strong>,
+    because these doodles are pre-drawn rather than generated from what anyone said.
+    If you repeat anything from this screen as a finding, that is the error this box exists to prevent.
+  </p>
+</div>
+
+<section class="storywriter" role="note" aria-label="Primary evidence against this concept's mechanism">
+  <h2>The evidence that argues against this concept</h2>
+  <p>StoryWriter (PMC9810434) is the only primary study located that measured how people react to an AI-generated image of their own emotional disclosure. Qualitative study, n=54:</p>
+  <div class="sw-stats">
+    <div class="sw-stat"><span class="num">70.37%</span><span class="lbl">(38/54) judged the generated image irrelevant to their own narrative</span></div>
+    <div class="sw-stat"><span class="num">70.97%</span><span class="lbl">described the image in negative language — "scary," "unsettling," "creepy"</span></div>
+    <div class="sw-stat"><span class="num">26.63%</span><span class="lbl">of images rated suitable for the writing task</span></div>
+  </div>
+  <p>The study's own mechanism finding: the modest benefit it measured (anger d=−0.40, sadness d=−0.63) is attributable to <strong>the writing process, not the images</strong>.</p>
+  <p class="sw-source">Source: PMC9810434, fetched and read in full — brief ledger #9–#12. Whether a hand-drawn/doodle style avoids the <em>unsettling</em> half of this reaction (<strong>#13b</strong>) is untested anywhere reachable — that is the one thing this prototype exists to probe, not to answer. The <em>irrelevance</em> half (<strong>#13a</strong>, 70.37% above) is a semantic-match problem that no style change plausibly fixes, and this prototype does not speak to it at all.</p>
+</section>
+
+<div class="layout">
+  <div class="main-col">
+
+    <h2 class="section-heading">New entry — capture demo</h2>
+    <div class="composer">
+      <div class="mode-toggle" role="tablist" aria-label="entry input mode">
+        <button class="mode-btn active" data-mode="text" type="button">Type</button>
+        <button class="mode-btn" data-mode="voice" type="button">Speak</button>
+      </div>
+
+      <div class="mode-panel" data-panel="text">
+        <textarea id="composerText" placeholder="Type how your day went..." aria-label="typed entry text"></textarea>
+      </div>
+
+      <div class="mode-panel" data-panel="voice" hidden>
+        <button id="recordBtn" class="record-btn" type="button">● Record (mocked)</button>
+        <p class="mock-note">[MOCKED — this plays a fake waveform and drops in a canned transcript. There is no live speech-to-text in this build.]</p>
+        <div class="waveform" id="waveform" hidden>
+          <span style="animation-delay:0s"></span><span style="animation-delay:.1s"></span><span style="animation-delay:.2s"></span>
+          <span style="animation-delay:.3s"></span><span style="animation-delay:.15s"></span><span style="animation-delay:.25s"></span>
+          <span style="animation-delay:.05s"></span><span style="animation-delay:.35s"></span>
+        </div>
+        <textarea id="voiceTranscript" placeholder="Transcript will appear here after recording..." aria-label="voice transcript, editable after mock recording"></textarea>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button id="saveEntryBtn" class="btn" type="button">Save entry</button>
+        <div id="sc003Readout" hidden
+             style="margin-top:14px; padding:10px 14px; background:var(--paper);
+                    border:2px solid var(--green-earth); box-shadow:4px 4px 0 var(--line);
+                    font-family:'Space Mono',ui-monospace,monospace; font-size:12px; line-height:1.5;">
+          <strong>SC-003</strong> — time from first keystroke to saved entry:
+          <span id="sc003Value" style="color:var(--green-earth); font-weight:700;"></span>.
+          Measured locally, not stored, not transmitted, n=1 and not a finding. This is the only
+          success criterion in the brief that this Tier 1 build can exercise at all.
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-heading">Entries</h2>
+    <div id="entryList">
+
+      <article class="entry" data-doodle-index="0">
+        <div class="entry-meta">
+          <span class="tag">[TEST DATA]</span>
+          <span class="entry-name">Fictional entry — "Marge Widdershins," Tuesday (fabricated, not a real person)</span>
+        </div>
+        <div class="entry-body">
+          <div class="entry-text">
+            <h4>Entry text</h4>
+            <p>"Spent the whole morning untangling a scheduling mess that wasn't even mine to fix. By the afternoon I'd forgotten what I was even annoyed about. Ate lunch standing up. Again."</p>
+          </div>
+          <div class="doodle-pane">
+            <div class="consent-row">
+              <input type="checkbox" class="consent-check" id="consent-0">
+              <label for="consent-0">I consent to generating an image from this entry, separate from general app terms (GDPR Art. 9 inference).</label>
+            </div>
+            <button class="btn render-btn" type="button" disabled>Render doodle</button>
+            <div class="doodle-slot" hidden>
+              <div class="doodle-canvas"></div>
+              <div class="doodle-controls">
+                <button class="btn btn-ghost again-btn" type="button">Render again</button>
+                <button class="btn btn-warn discard-btn" type="button">This doesn't match — discard</button>
+              </div>
+              <div class="describe-box">
+                <label>Describe this image in your own words. <strong>Nothing typed here is saved, stored, timestamped, or exported</strong> — this is a placeholder for the Tier 2 measurement instrument, which needs live generation to mean anything. On pre-drawn doodles it cannot produce reaction data.</label>
+                <textarea class="describe-input" placeholder="Type your description here..."></textarea>
+                <button class="btn btn-small save-desc-btn" type="button">Save description</button>
+                <div class="desc-saved" hidden>Shown on screen only — not saved, not stored, not timestamped. Still zero reaction data.</div>
+              </div>
+            </div>
+            <div class="discard-note" hidden>Doodle discarded. Entry text above is unchanged. No inferred-emotion data retained for this render.</div>
+          </div>
+        </div>
+        <button class="btn btn-tiny delete-entry-btn" type="button">Delete entry — text, doodle, and description in one action</button>
+      </article>
+
+      <article class="entry" data-doodle-index="1">
+        <div class="entry-meta">
+          <span class="tag">[TEST DATA]</span>
+          <span class="entry-name">Fictional entry — "Corwin Featherbolt," Thursday (fabricated, not a real person)</span>
+        </div>
+        <div class="entry-body">
+          <div class="entry-text">
+            <h4>Entry text</h4>
+            <p>"Good morning, rough afternoon, fine by dinner. The bad meeting cast a longer shadow than it deserved to. Walked it off around the block twice."</p>
+          </div>
+          <div class="doodle-pane">
+            <div class="consent-row">
+              <input type="checkbox" class="consent-check" id="consent-1">
+              <label for="consent-1">I consent to generating an image from this entry, separate from general app terms (GDPR Art. 9 inference).</label>
+            </div>
+            <button class="btn render-btn" type="button" disabled>Render doodle</button>
+            <div class="doodle-slot" hidden>
+              <div class="doodle-canvas"></div>
+              <div class="doodle-controls">
+                <button class="btn btn-ghost again-btn" type="button">Render again</button>
+                <button class="btn btn-warn discard-btn" type="button">This doesn't match — discard</button>
+              </div>
+              <div class="describe-box">
+                <label>Describe this image in your own words. <strong>Nothing typed here is saved, stored, timestamped, or exported</strong> — this is a placeholder for the Tier 2 measurement instrument, which needs live generation to mean anything. On pre-drawn doodles it cannot produce reaction data.</label>
+                <textarea class="describe-input" placeholder="Type your description here..."></textarea>
+                <button class="btn btn-small save-desc-btn" type="button">Save description</button>
+                <div class="desc-saved" hidden>Shown on screen only — not saved, not stored, not timestamped. Still zero reaction data.</div>
+              </div>
+            </div>
+            <div class="discard-note" hidden>Doodle discarded. Entry text above is unchanged. No inferred-emotion data retained for this render.</div>
+          </div>
+        </div>
+        <button class="btn btn-tiny delete-entry-btn" type="button">Delete entry — text, doodle, and description in one action</button>
+      </article>
+
+      <article class="entry" data-doodle-index="2">
+        <div class="entry-meta">
+          <span class="tag">[TEST DATA]</span>
+          <span class="entry-name">Fictional entry — "Odalys Trench," Saturday (fabricated, not a real person)</span>
+        </div>
+        <div class="entry-body">
+          <div class="entry-text">
+            <h4>Entry text</h4>
+            <p>"Rained the whole day, which was fine because I had nowhere to be. Read half a book. Called my sister. Nothing happened and it was the best kind of nothing."</p>
+          </div>
+          <div class="doodle-pane">
+            <div class="consent-row">
+              <input type="checkbox" class="consent-check" id="consent-2">
+              <label for="consent-2">I consent to generating an image from this entry, separate from general app terms (GDPR Art. 9 inference).</label>
+            </div>
+            <button class="btn render-btn" type="button" disabled>Render doodle</button>
+            <div class="doodle-slot" hidden>
+              <div class="doodle-canvas"></div>
+              <div class="doodle-controls">
+                <button class="btn btn-ghost again-btn" type="button">Render again</button>
+                <button class="btn btn-warn discard-btn" type="button">This doesn't match — discard</button>
+              </div>
+              <div class="describe-box">
+                <label>Describe this image in your own words. <strong>Nothing typed here is saved, stored, timestamped, or exported</strong> — this is a placeholder for the Tier 2 measurement instrument, which needs live generation to mean anything. On pre-drawn doodles it cannot produce reaction data.</label>
+                <textarea class="describe-input" placeholder="Type your description here..."></textarea>
+                <button class="btn btn-small save-desc-btn" type="button">Save description</button>
+                <div class="desc-saved" hidden>Shown on screen only — not saved, not stored, not timestamped. Still zero reaction data.</div>
+              </div>
+            </div>
+            <div class="discard-note" hidden>Doodle discarded. Entry text above is unchanged. No inferred-emotion data retained for this render.</div>
+          </div>
+        </div>
+        <button class="btn btn-tiny delete-entry-btn" type="button">Delete entry — text, doodle, and description in one action</button>
+      </article>
+
+    </div>
+  </div>
+
+  <aside class="rail" aria-label="Bradley rail — project status">
+    <span class="badge">TIER 1 · CONCEPT</span>
+    <p style="margin-top:14px; font-size:13px;">
+      This prototype tests <strong>one half of one named unknown</strong>. StoryWriter's finding is two numbers, not one: <strong>#13a</strong> — 70.37% found the image <em>irrelevant to what they actually said</em> (a semantic-match failure, which a style change does <strong>not</strong> plausibly fix), and <strong>#13b</strong> — 70.97% found it <em>unsettling</em> (an affective-register failure, which a hand-drawn style plausibly does address). This prototype speaks only to #13b, the more forgiving half. It does not test — and cannot answer — whether the concept improves retention, reduces friction, or helps anyone with their day. <strong>58.6% of this brief's tagged claims are [A]/[?]</strong> (17 of 29, grep-verified; the earlier 57.1%/28 figure was superseded when #13 was split).
+    </p>
+
+    <h2>What you nailed</h2>
+    <div class="dual-block">
+      <div class="dual-item nailed">
+        <strong>Nailed</strong>
+        The doodle never replaces the text — original entry is visible next to every render, satisfying FR-003 directly, and discard/render-again never touch the underlying entry (FR-004).
+      </div>
+      <div class="dual-item nailed">
+        <strong>Nailed</strong>
+        The StoryWriter numbers (70.37% / 70.97% / 26.63%) are on the artifact itself at full strength, not softened into an appendix — the thing this build exists to prevent from being laundered.
+      </div>
+      <div class="dual-item nailed">
+        <strong>Nailed</strong>
+        Voice capture is unmistakably mocked — labeled inline, canned transcript, no implied live transcription (FR-001, constitution honesty rule).
+      </div>
+    </div>
+
+    <h2>What will hurt you</h2>
+    <div class="dual-block">
+      <div class="dual-item hurt">
+        <strong>Will hurt you</strong>
+        The consent checkbox demonstrates the UI pattern for FR-006 but is not legal review — generic wording will not satisfy a real GDPR Art. 9 disclosure obligation.
+      </div>
+      <div class="dual-item hurt">
+        <strong>Will hurt you</strong>
+        Nobody has tested whether doodle style avoids StoryWriter's <em>unsettling</em> reaction (#13b) — and even a clean result there leaves <strong>#13a untouched</strong>: whether the image renders what the person actually said. A prettier picture that still misrepresents someone is a worse product, not a better one; it fails more pleasantly. Showing this prototype without saying that out loud is how "testing half an unknown" quietly becomes "the concept works."
+      </div>
+      <div class="dual-item hurt">
+        <strong>Will hurt you</strong>
+        FR-010's deletion propagation timing has no source anywhere in this corpus — the "delete entry" button here is a UI gesture, not a verified data-lifecycle guarantee.
+      </div>
+    </div>
+
+    <h2>Routed</h2>
+
+    <div class="card-route">
+      <h3>Product</h3>
+      <p><strong>Product does:</strong> Commission a moderated reaction test using StoryWriter's own Study 2 method (describe-in-your-own-words + relevance rating) before any decision to move past Tier 1.</p>
+      <p><strong>Why now:</strong> [R] The only comparable primary finding (ledger #9–#11) is unfavorable; proceeding further without testing the doodle-style-specific unknown repeats an already-measured failure mode.</p>
+      <p><strong>If you ship without it:</strong> the team reports "the concept is validated by research" internally when the nearest analogue found majority-negative reception — evidence laundering (brief failure mode #2).</p>
+      <div class="roi">
+        <div>[ROI]</div>
+        <div><strong>Business:</strong> Unknown: gap — no OKR or funded initiative exists for this concept (brief frontmatter).</div>
+        <div><strong>User:</strong> Unknown: gap — no data on whether reviewing a doodle is faster or slower than re-reading/re-listening to an entry (ledger #17–#18).</div>
+        <div><strong>Unknown:</strong> #13b — whether a doodle style avoids the unsettling reaction StoryWriter measured. And separately #13a — whether any generated image can match what the person actually said. #13a is the more damaging half and this concept's bet does not address it.</div>
+      </div>
+    </div>
+
+    <div class="card-route">
+      <h3>Design</h3>
+      <p><strong>Design does:</strong> Rewrite the consent copy so it reads as a specific, understandable Art. 9 disclosure rather than boilerplate, and usability-test whether people actually notice and read it.</p>
+      <p><strong>Why now:</strong> [R] FR-006 requires consent distinct from general terms of service; a checkbox with generic wording does not satisfy that intent (scout/05, ledger #23–#24).</p>
+      <p><strong>If you ship without it:</strong> consent theatre — looks compliant on screen, isn't legally distinct from ordinary ToS acceptance.</p>
+      <div class="roi">
+        <div>[ROI]</div>
+        <div><strong>Business:</strong> Unknown: gap.</div>
+        <div><strong>User:</strong> Unknown: gap — no usability data on whether current consent copy is read or understood.</div>
+        <div><strong>Unknown:</strong> whether users engage with consent checkboxes at all in this flow — untested here.</div>
+      </div>
+    </div>
+
+    <div class="card-route">
+      <h3>Research</h3>
+      <p><strong>Research does:</strong> Run the reaction test (StoryWriter Study 2 method) measuring <strong>both</strong> halves separately — #13a semantic match and #13b affective register. Per the brief's falsifiability table, #13b improving while #13a does not is a <strong>re-scope-or-kill</strong>, not a partial win, and it is the most likely outcome on current evidence. Separately, pursue institutional access to the paywalled writing-vs-drawing comparison in scout/04 (ledger #21, HTTP 403, never read) — the most relevant study found and the one nobody has actually read.</p>
+      <p><strong>Why now:</strong> [D] Gate 2 explicitly stays PARTIAL until this test exists — an open, unchecked acceptance-criteria box in vision.md, not a stylistic choice.</p>
+      <p><strong>If you ship without it:</strong> the team has no way to know if doodle style differs from StoryWriter's unfavorable finding — the decision proceeds on the same unresolved unknown indefinitely.</p>
+      <div class="roi">
+        <div>[ROI]</div>
+        <div><strong>Business:</strong> Unknown: gap.</div>
+        <div><strong>User:</strong> Unknown: gap.</div>
+        <div><strong>Unknown:</strong> named explicitly above — this card is itself the research brief.</div>
+      </div>
+    </div>
+
+    <div class="card-route">
+      <h3>Eng</h3>
+      <p><strong>Eng does:</strong> Before any real build, design the actual delete-propagation path (FR-010) and confirm a retention SLA with legal/privacy rather than assuming one.</p>
+      <p><strong>Why now:</strong> [?] The brief names this gap explicitly — "retention/deletion SLA not sourced anywhere in this corpus" — rather than inventing a number to fill it.</p>
+      <p><strong>If you ship without it:</strong> a delete action that looks complete in the UI but leaves inferred-emotion data or cached doodle assets behind — direct Art. 9 exposure (ledger #23–#24, brief failure mode #3).</p>
+      <div class="roi">
+        <div>[ROI]</div>
+        <div><strong>Business:</strong> Unknown: gap.</div>
+        <div><strong>User:</strong> Unknown: gap.</div>
+        <div><strong>Unknown:</strong> the actual retention/deletion SLA — not sourced anywhere in this corpus (brief FR-010).</div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<footer>
+  Tier 1 / Concept — Band Protocol × Zero Vector, doodle-journal test repo. Source brief: briefs/doodle-journal.brief.md. All entries and doodles above are fictional [TEST DATA]. No clinical or therapeutic claim is made anywhere on this screen.
+</footer>
+
+</div>
+
+<!-- ===== hand-drawn doodle templates — [TEST DATA], pre-authored, no image generation ===== -->
+<template id="doodle-0">
+  <svg viewBox="0 0 140 140" width="130" height="130" aria-label="hand-drawn tangled scribble doodle">
+    <g transform="rotate(-3 70 70)" fill="none" stroke="#1a1612" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22,92 C10,58 42,28 62,44 C86,63 44,74 56,101 C67,124 103,112 97,79 C92,48 58,39 70,66 C79,87 102,96 112,68" stroke-width="3" opacity="0.55"/>
+      <path d="M24,90 C12,57 44,30 63,46 C85,64 46,75 58,99 C68,122 101,110 95,78 C90,49 60,41 71,65 C80,86 100,94 111,67" stroke-width="2.5"/>
+    </g>
+  </svg>
+</template>
+<template id="doodle-1">
+  <svg viewBox="0 0 140 140" width="130" height="130" aria-label="hand-drawn peaks and small sun doodle">
+    <g transform="rotate(2 70 70)" fill="none" stroke="#1a1612" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16,100 C34,60 44,102 58,58 C70,26 80,88 96,50 C106,28 116,52 124,40" stroke-width="3" opacity="0.5"/>
+      <path d="M17,99 C35,61 45,101 59,59 C71,28 81,87 97,51 C107,29 117,53 125,41" stroke-width="2.5"/>
+      <circle cx="106" cy="26" r="10" stroke-width="2.5"/>
+      <path d="M106,10 L106,4 M120,20 L126,16 M120,32 L126,36" stroke-width="2"/>
+    </g>
+  </svg>
+</template>
+<template id="doodle-2">
+  <svg viewBox="0 0 140 140" width="130" height="130" aria-label="hand-drawn rain cloud with corner sun doodle">
+    <g transform="rotate(-2 70 70)" fill="none" stroke="#1a1612" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30,58 C18,58 16,76 32,78 C24,92 44,98 52,86 C60,98 84,94 80,78 C98,80 100,58 82,56 C80,40 52,40 50,56 C42,52 34,52 30,58" stroke-width="3" opacity="0.5"/>
+      <path d="M32,57 C20,57 18,75 34,77 C26,91 45,97 53,85 C61,97 83,93 79,77 C97,79 99,57 81,55 C79,39 53,39 51,55 C43,51 35,51 32,57" stroke-width="2.5"/>
+      <path d="M38,102 L34,114 M56,104 L52,118 M74,102 L70,114" stroke-width="2.5"/>
+      <circle cx="112" cy="28" r="9" stroke-width="2"/>
+    </g>
+  </svg>
+</template>
+<template id="doodle-3">
+  <svg viewBox="0 0 140 140" width="130" height="130" aria-label="hand-drawn calm wavy lines doodle">
+    <g transform="rotate(1 70 70)" fill="none" stroke="#1a1612" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16,50 C34,38 48,62 66,50 C84,38 98,62 116,50" stroke-width="3" opacity="0.5"/>
+      <path d="M16,72 C34,60 48,84 66,72 C84,60 98,84 116,72" stroke-width="3" opacity="0.5"/>
+      <path d="M16,94 C34,82 48,106 66,94 C84,82 98,106 116,94" stroke-width="3" opacity="0.5"/>
+      <path d="M17,49 C35,37 49,61 67,49 C85,37 99,61 117,49" stroke-width="2.5"/>
+      <path d="M17,71 C35,59 49,83 67,71 C85,59 99,83 117,71" stroke-width="2.5"/>
+      <path d="M17,93 C35,81 49,105 67,93 C85,81 99,105 117,93" stroke-width="2.5"/>
+    </g>
+  </svg>
+</template>
+
+<script>
+(function(){
+  "use strict";
+  var DOODLE_COUNT = 4;
+  var canned = [
+    "Long stretch of steady, unremarkable hours. Small errand in the middle, otherwise quiet.",
+    "Started tense, eased off by evening. One good conversation carried more of the day than expected.",
+    "Busy start to finish. Nothing dramatic, just a lot of small things stacked on top of each other."
+  ];
+  var cannedIndex = 0;
+
+  function injectDoodle(canvasEl, index){
+    var tpl = document.getElementById('doodle-' + index);
+    canvasEl.innerHTML = '';
+    if (tpl){
+      canvasEl.appendChild(tpl.content.cloneNode(true));
+    }
+  }
+
+  // ---- entry cards: consent gating, render, again, discard, describe, delete ----
+  function wireEntry(entry){
+    var consentCheck = entry.querySelector('.consent-check');
+    var renderBtn = entry.querySelector('.render-btn');
+    var doodleSlot = entry.querySelector('.doodle-slot');
+    var canvas = entry.querySelector('.doodle-canvas');
+    var againBtn = entry.querySelector('.again-btn');
+    var discardBtn = entry.querySelector('.discard-btn');
+    var discardNote = entry.querySelector('.discard-note');
+    var describeInput = entry.querySelector('.describe-input');
+    var saveDescBtn = entry.querySelector('.save-desc-btn');
+    var descSaved = entry.querySelector('.desc-saved');
+    var deleteBtn = entry.querySelector('.delete-entry-btn');
+
+    if (consentCheck && renderBtn){
+      consentCheck.addEventListener('change', function(){
+        renderBtn.disabled = !consentCheck.checked;
+      });
+    }
+
+    if (renderBtn){
+      renderBtn.addEventListener('click', function(){
+        var idx = parseInt(entry.getAttribute('data-doodle-index'), 10) || 0;
+        injectDoodle(canvas, idx);
+        doodleSlot.hidden = false;
+        discardNote.hidden = true;
+      });
+    }
+
+    if (againBtn){
+      againBtn.addEventListener('click', function(){
+        var idx = parseInt(entry.getAttribute('data-doodle-index'), 10) || 0;
+        idx = (idx + 1) % DOODLE_COUNT;
+        entry.setAttribute('data-doodle-index', idx);
+        injectDoodle(canvas, idx);
+      });
+    }
+
+    if (discardBtn){
+      discardBtn.addEventListener('click', function(){
+        canvas.innerHTML = '';
+        doodleSlot.hidden = true;
+        discardNote.hidden = false;
+        if (descSaved) descSaved.hidden = true;
+        if (describeInput) describeInput.value = '';
+      });
+    }
+
+    if (saveDescBtn){
+      saveDescBtn.addEventListener('click', function(){
+        if (describeInput && describeInput.value.trim().length > 0){
+          descSaved.hidden = false;
+        }
+      });
+    }
+
+    if (deleteBtn){
+      deleteBtn.addEventListener('click', function(){
+        var ok = window.confirm('Delete this entry — its text, its doodle, and its description — in one action? This cannot be undone in this prototype.');
+        if (ok){
+          entry.remove();
+        }
+      });
+    }
+  }
+
+  document.querySelectorAll('.entry').forEach(wireEntry);
+
+  // ---- composer: mode toggle ----
+  var modeButtons = document.querySelectorAll('.mode-btn');
+  modeButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      modeButtons.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var mode = btn.getAttribute('data-mode');
+      document.querySelectorAll('.mode-panel').forEach(function(panel){
+        panel.hidden = panel.getAttribute('data-panel') !== mode;
+      });
+    });
+  });
+
+  // ---- composer: mocked recording ----
+  var recordBtn = document.getElementById('recordBtn');
+  var waveform = document.getElementById('waveform');
+  var voiceTranscript = document.getElementById('voiceTranscript');
+  var recording = false;
+
+  if (recordBtn){
+    recordBtn.addEventListener('click', function(){
+      if (recording) return;
+      recording = true;
+      recordBtn.textContent = '● Recording... (mocked)';
+      recordBtn.classList.add('recording');
+      waveform.hidden = false;
+      voiceTranscript.value = '';
+      setTimeout(function(){
+        recording = false;
+        waveform.hidden = true;
+        recordBtn.classList.remove('recording');
+        recordBtn.textContent = 'Re-record (mocked)';
+        voiceTranscript.value = canned[cannedIndex % canned.length];
+        cannedIndex++;
+      }, 1600);
+    });
+  }
+
+  // ---- composer: save entry ----
+  var saveEntryBtn = document.getElementById('saveEntryBtn');
+  var entryList = document.getElementById('entryList');
+  var fictionalNames = ["Persimmon Oakwhistle", "Bartleby Crane-Solis", "Wrenna Applethorpe"];
+  var newEntryCounter = 0;
+
+  function buildEntryCard(text, doodleIdx){
+    var idNum = 'new-' + Date.now() + '-' + newEntryCounter;
+    var name = fictionalNames[newEntryCounter % fictionalNames.length];
+    newEntryCounter++;
+    var article = document.createElement('article');
+    article.className = 'entry';
+    article.setAttribute('data-doodle-index', doodleIdx);
+    article.innerHTML =
+      '<div class="entry-meta">' +
+        '<span class="tag">[TEST DATA]</span>' +
+        '<span class="entry-name">Fictional entry — "' + name + '," new draft (fabricated, not a real person)</span>' +
+      '</div>' +
+      '<div class="entry-body">' +
+        '<div class="entry-text"><h4>Entry text</h4><p></p></div>' +
+        '<div class="doodle-pane">' +
+          '<div class="consent-row">' +
+            '<input type="checkbox" class="consent-check" id="consent-' + idNum + '">' +
+            '<label for="consent-' + idNum + '">I consent to generating an image from this entry, separate from general app terms (GDPR Art. 9 inference).</label>' +
+          '</div>' +
+          '<button class="btn render-btn" type="button" disabled>Render doodle</button>' +
+          '<div class="doodle-slot" hidden>' +
+            '<div class="doodle-canvas"></div>' +
+            '<div class="doodle-controls">' +
+              '<button class="btn btn-ghost again-btn" type="button">Render again</button>' +
+              '<button class="btn btn-warn discard-btn" type="button">This doesn\'t match — discard</button>' +
+            '</div>' +
+            '<div class="describe-box">' +
+              '<label>Describe this image in your own words. <strong>Nothing typed here is saved, stored, timestamped, or exported</strong> — this is a placeholder for the Tier 2 measurement instrument, which needs live generation to mean anything. On pre-drawn doodles it cannot produce reaction data.</label>' +
+              '<textarea class="describe-input" placeholder="Type your description here..."></textarea>' +
+              '<button class="btn btn-small save-desc-btn" type="button">Save description</button>' +
+              '<div class="desc-saved" hidden>Shown on screen only — not saved, not stored, not timestamped. Still zero reaction data.</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="discard-note" hidden>Doodle discarded. Entry text above is unchanged. No inferred-emotion data retained for this render.</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn btn-tiny delete-entry-btn" type="button">Delete entry — text, doodle, and description in one action</button>';
+    article.querySelector('.entry-text p').textContent = text;
+    return article;
+  }
+
+  // ---- SC-003 instrumentation: time from first keystroke to saved entry ----
+  // The only success criterion this Tier 1 build can exercise. Local only:
+  // nothing stored, nothing transmitted, n=1, explicitly not a finding.
+  var composerStart = null;
+  function markComposerStart(){ if (composerStart === null) composerStart = Date.now(); }
+  var composerTextEl = document.getElementById('composerText');
+  if (composerTextEl) composerTextEl.addEventListener('input', markComposerStart);
+  if (voiceTranscript) voiceTranscript.addEventListener('input', markComposerStart);
+  if (recordBtn) recordBtn.addEventListener('click', markComposerStart);
+
+  function reportSc003(){
+    if (composerStart === null) return;
+    var secs = (Date.now() - composerStart) / 1000;
+    var readout = document.getElementById('sc003Readout');
+    var value = document.getElementById('sc003Value');
+    if (readout && value){
+      value.textContent = secs.toFixed(1) + 's';
+      readout.hidden = false;
+    }
+    composerStart = null;
+  }
+
+  if (saveEntryBtn){
+    saveEntryBtn.addEventListener('click', function(){
+      var activeMode = document.querySelector('.mode-btn.active').getAttribute('data-mode');
+      var text = '';
+      if (activeMode === 'text'){
+        text = document.getElementById('composerText').value.trim();
+      } else {
+        text = voiceTranscript.value.trim();
+      }
+      if (!text){
+        window.alert('Nothing to save yet — type an entry or record a mocked transcript first.');
+        return;
+      }
+      var doodleIdx = newEntryCounter % DOODLE_COUNT;
+      var card = buildEntryCard(text, doodleIdx);
+      entryList.insertBefore(card, entryList.firstChild);
+      wireEntry(card);
+      reportSc003();
+      document.getElementById('composerText').value = '';
+      voiceTranscript.value = '';
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
