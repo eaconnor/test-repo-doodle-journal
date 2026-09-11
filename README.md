@@ -32,6 +32,12 @@ prototypes/doodle-journal/
 
 The prototype is **not** a stand-alone deliverable and should not be sent onward by itself. It renders a red "No data has been collected" panel above the fold precisely because the HTML is the artifact most likely to be forwarded without its brief, and the numbers on it are evidence *against* the concept — not results.
 
+## What's ours and what isn't
+
+- `.specify/` and `.claude/skills/speckit-*` are **vendored from [github/spec-kit](https://github.com/github/spec-kit)** — not original work here. They are committed rather than gitignored on purpose: the `speckit-*` skills are the layer that reads `.specify/extensions.yml`, so enforcement only travels with the repo if they do.
+- `.claude/skills/check-gates/`, `check-gates.sh`, the gate files (`ux.md` / `vision.md` / `design.md`), the constitution, the brief, the scout corpus, the critic passes and the prototype are original.
+- Licensed MIT — see `LICENSE`. Fork it, teach it, build on it.
+
 ## Setup on a fresh clone — one required step
 
 `.specify/feature.json` is **not in this repo**, and cannot be: spec-kit's own `.specify/.gitignore` treats it as machine-local state. Without it, `get_feature_paths` hard-errors, `setup-plan.sh` exits 1, and `/speckit-plan` dies at step 1 of its Outline — before it ever reaches the constitution or the gate. So after cloning, run one of:
