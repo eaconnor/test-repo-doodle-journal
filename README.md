@@ -34,8 +34,17 @@ OPEN.md     ← the register: every open question, typed HUMAN / RESEARCH / ACCE
 | `./check-gates.sh` | are the gate boxes ticked? | 1 if any open, or if a gate file has no parsable criteria |
 | `./check-blocked.sh` | are we waiting on a *person*? | 2 if a HUMAN row stands |
 | `./check-trace.sh` | have the criteria drifted from what they claim to enforce? | 4 on a broken or orphaned trace |
+| `python3 scripts/check-design.py` | does the **build** actually obey the design system? | 6 on a violation · 7 if only unresolved pairs remain |
+| `python3 scripts/check-risk.py <dest>` | what is the risk of shipping **to a named destination**? | 9 on a ship-blocking hazard · 2 if no destination given |
+| `./check-eng.sh` | the five gates eng owns | 10 if the build can harm a user · 11 if something is off-roadmap |
+| `./check-value.sh` | is the contribution register well-formed and honest? | 13 if malformed or if it records no costs |
+| `python3 scripts/ux-score.py` | conformance baseline, ceiling, and the work list | 0 — reports, never blocks |
 
-The exit codes differ on purpose, so a caller can tell "a box is unticked" from "a person owes us an answer" from "a criterion points at something that no longer exists."
+Every exit code is distinct on purpose, so a caller can tell "a box is unticked" from "a person owes us an answer" from "a criterion points at nothing" from "this build can hurt someone." A single pass/fail would collapse all of those into one number and lose the only information that tells you what to do next.
+
+**The split that makes this usable by engineering.** `check-eng.sh` divides Gate 3 into **FLOOR** — accessibility, data integrity, lawfulness, security, never gated on problem validation — and **FIT** — polish that only pays off if the concept survives. "Don't build until Gate 1 passes" is right for FIT and dangerously wrong for FLOOR; you do not wait for a reaction test to label a form field. Eng gets a hard CI failure on FLOOR (exit 10) and a visible warning on everything else.
+
+**`VALUE.md`** is the register of what research and design actually contributed, with the counterfactual stated for every row and each one labelled `EVIDENCED` or `CLAIMED`. `check-value.sh` fails the register if it contains **no cost or zero-value rows** — because a value register with only wins in it is a case study, and a case study is what the file exists to replace.
 
 `scripts/contrast.py` is not a gate script — it computes the WCAG contrast table in `design.md` ds:1.1, so those ratios are reproducible rather than asserted.
 
