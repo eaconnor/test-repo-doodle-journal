@@ -1,51 +1,29 @@
 ---
 scope: product
-product: "Doodle Journal (test concept)"
 gate: 2
-brief: briefs/doodle-journal.brief.md
-eval_loop: built-in — see "Acceptance Criteria" below
-confidence_regime: PROCEED-FLAGGED
+derived_from: "Intent Specs/doodle-journal.md §1 (desired outcome), §4 (scope and non-goals), §10 (escalation triggers), §14 (decision log)"
+role: "DERIVED MECHANICAL CHECKLIST — holds no reasoning. Judgment lives in the intent spec."
+eval_loop: "./check-gates.sh (box state) + ./check-trace.sh (trace validity)"
 ---
 
-# Vision — Doodle Journal (Test Concept)
+# vision.md — Gate 2 (derived checklist)
 
-## Direction
+**Do not write reasoning here.** The direction, the scope boundaries, the anti-success signals and the decision log are all canonical in `Intent Specs/doodle-journal.md`. This file only holds criteria a script can settle.
 
-A person should be able to put down how their day went without the blank page winning. If we render that entry as an image, the image serves the person's own recollection — it is not the product's party trick, and it is never the only record of what they said.
-
-## What This Is Not
-
-- **Not a product bet.** `[R]` The one primary study on the nearest analogous mechanism found majority-negative reception (70.37% irrelevant, 70.97% negative language — brief ledger #9-#10). Building this as a funded direction is not supported by the evidence that exists.
-- **Not a therapeutic tool.** The concept borrows a premise from art therapy — that images reach what words don't — without inheriting that field's clinical validation. No "processes your day," no "heals," no mood diagnosis. Constitutional, not stylistic.
-- **Not a validation exercise.** The Tier 1 build tests one named unknown. Shipping it answers nothing about whether the concept works for real people.
-
-## The Gate 2 call, stated plainly
-
-**PARTIAL / CONDITIONAL.** Defensible as a narrowly-scoped research probe into a single open question — whether a hand-drawn *doodle* style avoids the "grotesque / unsettling" reaction that more literal generated imagery produced (brief ledger #13, the one unknown the evidence has not already foreclosed). Not defensible as "we are building a doodle journal."
-
-The condition is the whole thing: if the framing drifts from *testing a named unknown* to *validating a concept*, Gate 2 fails retroactively. That drift is the most likely way this goes wrong, and it happens in a stakeholder readout, not in the code.
+**The decision log moved.** It now lives at intent spec **§14**, as a single canonical record. It is not duplicated here — a decision recorded in two places drifts, and today's session shipped a stale statistic for exactly that reason.
 
 ## Acceptance Criteria — Gate 2: Are we making the right thing?
 
-- [x] Scope is logged as a research probe testing one named unknown, not a product bet — Decision Log below
-- [x] The distinction between "testing a named unknown" and "validating the concept" is explicit in the brief and in this file
-- [ ] The prototype's own on-screen framing carries that distinction plus the StoryWriter numbers — not checkable until the build exists
-- [x] No clinical, therapeutic, or diagnostic claim appears in any artifact — verified across brief, `ux.md`, this file
-- [x] GDPR Article 9 exposure is named as a live design obligation, not deferred — brief FR-006, `ux.md` Atomic Insights
-- [ ] Gate 2 is not upgraded from PARTIAL until a doodle-style reaction test has actually been run — no such test exists; Beth's call to commission
+- [x] G2-01 — Scope is recorded as a Tier 1 concept probe, not a product bet · traces_to: §14 row 1 · verified_by: `grep` for the decision row in the intent spec
+- [x] G2-02 — Anti-success signals are stated, including the predicted-most-likely outcome · traces_to: §1 anti-success · verified_by: §1 contains the "fails more pleasantly" re-scope-or-kill condition
+- [x] G2-03 — A falsifiability table exists giving a Gate 2 consequence for each test result · traces_to: §1, brief falsifiability table · verified_by: 4-row outcome table present in the brief
+- [x] G2-04 — Unknown #13 is split into #13a and #13b everywhere it appears · traces_to: §1 anti-success · verified_by: `grep -c '#13a'` = `grep -c '#13b'` = 8 in the built artifact, both non-zero
+- [x] G2-05 — No clinical, therapeutic, or diagnostic claim appears in any artifact · traces_to: §4 non-goals, §10 · verified_by: `grep -iE 'therap|diagnos|heal|wellness'` returns only the disclaimer sentence
+- [x] G2-06 — GDPR Art. 9 exposure is named as a live obligation, with the inference step identified as the regulated act · traces_to: §8 · verified_by: `grep` for the Art. 9 statement in the intent spec and brief FR-006
+- [x] G2-07 — Out-of-scope items are enumerated, including crisis detection as explicitly not attempted · traces_to: §4 out of scope · verified_by: §4 lists it
+- [x] G2-08 — Escalation triggers are written down and include "anyone describes this as validated" · traces_to: §10 · verified_by: §10 contains that trigger
+- [x] G2-09 — Every decision in the log carries a date and a reason · traces_to: §14 · verified_by: 10 of 10 rows have both columns populated
+- [ ] G2-10 — Gate 2 upgraded from PARTIAL: a reaction test has been run and its result mapped through the falsifiability table · traces_to: `OPEN.md` H-01 · verified_by: H-01 resolved and a result row added to §14 — **currently open, owner Beth**
+- [ ] G2-11 — The Art. 9 consent copy has been reviewed by someone qualified · traces_to: §8, `OPEN.md` H-02 · verified_by: H-02 resolved with a named reviewer — **currently open, owner Beth to route**
 
-## Decision Log
-
-| Date | Decision | Why |
-|---|---|---|
-| 2026-09-11 | Build at Tier 1 / Concept fidelity as a research probe only; explicitly not a product bet | Brief Gate 2 verdict PARTIAL/CONDITIONAL. `[A]`+`[?]` = **58.6%** of tagged claims (29 rows), grep-verified after Critic Pass 1's #13 split — nearly 2× the 30% threshold. *(Was 57.1%/28 rows pre-split; superseded, not deleted)* |
-| 2026-09-11 | Tier 1 doodles are pre-drawn `[TEST DATA]`, **not** live inference — and SC-001/SC-002 are therefore deferred to Tier 2 | Critic Pass 1 FAIL #1: the brief permitted mocked doodles while requiring measurement of "their own generated doodle." Resolved by deciding, so the build cannot appear to answer a question it structurally cannot answer |
-| 2026-09-11 | Falsifiability table added to the brief — what moves Gate 2 in either direction | Critic Pass 1 MISSING: without it the probe could run indefinitely without producing a decision. The predicted outcome ("prettier but still irrelevant") is written down in advance as a re-scope-or-kill, not a partial win |
-| 2026-09-11 | The doodle is shown **alongside** the original text/transcript, never instead of it | Direct mitigation for ledger #9-#11: if the image misses, the person still has what they actually said |
-| 2026-09-11 | An immediate discard/regenerate path is a P3 requirement, not a polish item | At a 70%+ irrelevance rate on the nearest analogue, easy dismissal is the safe default, not a nice-to-have |
-| 2026-09-11 | Doodle generation requires an explicit per-entry action — never automatic or ambient | Ambient inference on intimate disclosure is both a GDPR Art. 9 problem (ledger #23-#24) and a trust problem |
-| 2026-09-11 | No clinical or therapeutic framing anywhere, including internal stakeholder copy | Constitution. The art-therapy literature was never validated on this population or this artifact |
-| 2026-09-11 | `idea_score` left UNSCORED in the brief rather than estimated | The scoring rubric was not located; a plausible-looking number was not invented to fill the field |
-| 2026-09-11 | `[TEST DATA]` seed entries only — fictional, visibly flagged | Real journal content is special-category data; the publicity test forbids it in a prototype |
-
-**No override has been logged.** Gates 1 and 2 both carry open boxes for real reasons; the only routes past them are satisfied criteria or an override Beth writes here herself.
+**2 of 11 open.** Both blocked on human decisions, tracked as `HUMAN` rows. `./check-blocked.sh` exits 2 while they stand.

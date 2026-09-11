@@ -6,6 +6,35 @@ Second wiring test for the three-gate framework (`ux.md` / `vision.md` / `design
 
 **What is actually being tested here is the plumbing, not the concept.** Two questions: does the gate script get invoked by a real `/speckit-plan` run, and does pipeline output fit the gate template or fight it.
 
+## How this is structured — read this first
+
+One canonical document, three derived checklists, four scripts.
+
+```
+Intent Specs/doodle-journal.md   ← CANONICAL. 16 sections. All reasoning lives here.
+                                    §5 UX intent = UXI-01..UXI-14 (experience principles,
+                                    desired feeling, key user states, accessibility)
+                                    §13 open questions -> points at OPEN.md
+                                    §14 decision log = the single record of decisions
+
+ux.md / vision.md / design.md    ← DERIVED. Mechanical checklists only, no reasoning.
+                                    Every criterion carries traces_to: an id above,
+                                    and verified_by: how it was settled.
+
+OPEN.md                          ← the register: every open question, typed
+                                    HUMAN / RESEARCH / ACCEPTED
+```
+
+| script | question it answers | exit |
+|---|---|---|
+| `./check-gates.sh` | are the gate boxes ticked? | 1 if any open |
+| `./check-blocked.sh` | are we waiting on a *person*? | 2 if a HUMAN row stands |
+| `./check-trace.sh` | have the derived checklists drifted from intent? | 4 on a broken or orphaned trace |
+
+The exit codes differ on purpose, so a caller can tell "a box is unticked" from "a person owes us an answer" from "the checklist no longer matches the intent."
+
+**Why split it this way.** The prose in a gate file added nothing the intent spec doesn't do better — but the gate *checkboxes* did real work, and a script reading them stopped a live `/speckit-plan` run. So judgment lives in the intent spec, where a human reads it; verification lives in the checklists, where a script settles it. `check-trace.sh` validates both directions and caught two orphaned UX requirements on its first run — intents that were written down and enforced by nothing.
+
 ## Reading order
 
 1. `.specify/memory/constitution.md` — the three gates, the five-link enforcement chain, and this repo's honesty rules

@@ -1,77 +1,62 @@
 ---
 scope: feature
-parent_ux: ux.md
-parent_vision: vision.md
-canonical_spec: spec.md
-brief: briefs/doodle-journal.brief.md
 gate: 3
-eval_loop: built-in — see "Acceptance Criteria" below
-evidence: prototypes/doodle-journal/doodle-journal.html · prototypes/doodle-journal/critic-pass-1.md · prototypes/doodle-journal/critic-pass-2.md · prototypes/doodle-journal/SOURCES.md
-council_pass: "NOT RUN — Beth's decision. These criteria rest on one critic pass, not critic + council."
+derived_from: "Intent Specs/doodle-journal.md §5 (UX intent, UXI-01..UXI-14), §7 (invariants), §11 (definition of done), §12 (testing)"
+role: "DERIVED MECHANICAL CHECKLIST — holds no reasoning. Judgment lives in the intent spec."
+eval_loop: "./check-gates.sh (box state) + ./check-trace.sh (trace validity)"
 ---
 
-# design.md — Doodle Journal (Test Concept)
+# design.md — Gate 3 (derived checklist)
 
-Gate 3 spine. Checked against the built artifact as it actually reads and actually runs — verified by reading the shipped `<style>`/`<script>` and by executing the interactions in a browser, not by trusting the brief's intent. `check-gates.sh` reads these boxes literally: an unchecked box means the condition is **not true yet**, not that it was overlooked.
+**Do not write reasoning here.** Experience principles, desired feeling, key user states and accessibility requirements are canonical at intent spec **§5** as `UXI-01`–`UXI-14`. This file only enforces them.
 
-> **Provenance caveat, stated up front because it matters more than any box below.** This file was authored *from* the finished build, by critic pass 2. That is backwards for a gate — a standard written after the artifact, grading the artifact on its own terms, is a description dressed as a bar. A real `design.md` should exist **before** build, derived from the design system and an accessibility standard, with the build then measured against it. Treated as a finding of this pipeline test, not as a template to copy.
+Every criterion was settled by reading the shipped `<style>`/`<script>` or by executing the interaction in a browser — not by reading the brief's intent. Unchecked means the condition is **not true**, never that it was overlooked.
 
-## Rules Pulled From the Design System
-
-This repo uses the Band's own locked palette (CLAUDE.md §11), not a customer-facing system — internal test-repo prototype, never shown to a customer.
-
-- Itten tokens locked and defined once in `:root`: `--vermillion:#D8472B`, `--ultramarine:#1F3C96`, `--ochre:#C99A2E`, `--violet:#5B3A7E`, `--green-earth:#5E7A3F`, `--cadmium:#E8B93A`, `--ink:#1a1612`, `--paper:#efe7d6`, `--card:#f7f0df`. Every colour traces to a `var()` — no ad-hoc hex anywhere, including in anything hand-patched after the build.
-- Typography: Space Mono (headers/UI) + Kalam (body/notes).
-- Grid 28px. Shadows: hard offset only, `Npx Npx 0 var(--line)`, fully opaque. No blur, no translucent shadows, no rounded corners, no emoji.
-- A hand-patch is not exempt from the design system. Content added outside the normal build step uses the same tokens and the same shadow convention as everything else.
+> **Provenance note, kept as a finding.** Version 0.1 of this file was authored *from* the finished build by critic pass 2 — a gate written after the artifact, grading it on its own terms. It has since been rewritten as a checklist derived from intent authored upstream, which is the correct direction. The original inversion is recorded at `OPEN.md` A-03.
 
 ## Acceptance Criteria — Gate 3: Are we making the thing right?
 
-**Honesty apparatus**
-- [x] FR-007 — A "Tier 1 · Concept" fidelity label is visible on the screen a stakeholder sees.
-- [x] FR-011 (narrow) — A "no reaction data collected / no user testing run" statement exists on-screen in a visually distinct treatment (own vermillion-bordered card, separate position) from the FR-007 badge.
-- [x] FR-011 (functional) — **No other on-screen copy contradicts that statement.** Was false at critic pass 2: the per-entry describe-box claimed "Measurement instrument… captured verbatim" and "Saved ✓ — verbatim, timestamped" while the JS only toggled a `hidden` attribute. Copy rewritten to state that nothing is saved, stored, timestamped, or exported; verified in DOM 2026-09-11.
-- [x] SC-006 — The no-reaction-data statement is verified true with no contradicting claim elsewhere. Follows from the above.
-- [x] Every ratio or statistic printed on the artifact matches its source document and was grep-verified, not retyped from memory. Was false at critic pass 2 — the Bradley rail shipped a superseded 57.1% while every source doc carried 58.6%. Corrected and re-verified (17/29 = 58.6%).
-- [x] The #13a / #13b split appears **consistently on every summary surface** — header, rail blurb, "what will hurt you", Product card, Research card, and the StoryWriter source line. Was present only in the header at critic pass 2; now 8 occurrences of each, verified in rendered text.
+**Invariants — verified by execution**
+- [x] G3-01 — Original entry text is displayed alongside every rendered doodle and is never the sole record · traces_to: UXI-01, UXI-08 · verified_by: DOM check after render; entry text present
+- [x] G3-02 — No doodle exists on load; generation fires only on an explicit per-entry action · traces_to: UXI-02 · verified_by: `svgsOnLoad` = 0, 1 SVG only after click
+- [x] G3-03 — Render is unavailable until per-entry consent is given · traces_to: UXI-10 · verified_by: render button `disabled` = true pre-consent, false post-consent
+- [x] G3-04 — Discard removes the doodle immediately and leaves the entry text intact · traces_to: UXI-03, UXI-09 · verified_by: post-discard SVG count 0, entry text unchanged
+- [x] G3-05 — The voice transcript is reviewable and editable before saving · traces_to: UXI-06 · verified_by: `readOnly` = false in DOM
 
-**Functional requirements, verified by execution**
-- [x] FR-002 — Doodle generation fires only after explicit per-entry consent *and* an explicit click. Verified: 0 doodles on load; render button `disabled` until the consent box is ticked.
-- [x] FR-003 — Original entry text displays alongside every doodle and is never the sole record. Verified in markup and after every interaction.
-- [x] FR-004 — Discard and "render again" never alter or delete the underlying entry text. Verified: after discard, 0 SVGs and entry text intact.
-- [x] FR-001 — The voice path produces a transcript the user can review **and edit** before saving. Was false at critic pass 2 (`readonly` never removed by any code path, contradicting its own aria-label); attribute removed, `readOnly === false` verified in DOM.
-- [x] FR-009 / SC-005 — All seed and composer-generated entries are fictional and visibly `[TEST DATA]`-tagged, with an explicit "(fabricated, not a real person)".
-- [x] FR-008 / SC-004 — No clinical, therapeutic, diagnostic, or "processes trauma" language in shipped copy. (The footer sentence *declining* such claims is compliance, not a violation.)
-- [x] SC-003 — Time from first keystroke to saved entry is **measured by the build**. Was uninstrumented at critic pass 2 despite spec.md naming it the one criterion Tier 1 could exercise; timer added and verified returning a real elapsed value (1.8s on test save). Local only — not stored, not transmitted, n=1, labelled on-screen as not a finding.
-- [ ] FR-006 — Consent capture reads as a specific, understandable GDPR Art. 9 disclosure distinct from general ToS, and has had usability or legal review. **Open** — the rail itself names the current copy as a UI pattern, not legally sufficient. No review has occurred.
-- [ ] FR-010 — Deletion of entry, doodle, and derived inference data propagates on a defined, sourced retention/deletion timing. **Open** — no SLA is sourced anywhere in this corpus; the delete button is a UI gesture (`entry.remove()`) with no propagation logic.
+**Self-disclosure — verified by grep**
+- [x] G3-06 — A "Tier 1 · Concept" fidelity label is visible · traces_to: UXI-04 · verified_by: `grep -c 'Tier 1'` ≥ 1
+- [x] G3-07 — A "no reaction data collected / no user testing run" statement exists, visually distinct from the fidelity label · traces_to: UXI-04 · verified_by: separate bordered block, own heading, distinct position
+- [x] G3-08 — No on-screen copy contradicts G3-07 by claiming data is captured, saved, or timestamped · traces_to: UXI-04 · verified_by: `grep -c 'verbatim, timestamped'` = 0
+- [x] G3-09 — Every ratio printed on the artifact matches its source document · traces_to: §1 success metrics · verified_by: 58.6% present, stale 57.1% present only as an explicitly superseded reference
+- [x] G3-10 — All seed data is fictional and visibly `[TEST DATA]` tagged · traces_to: §11 · verified_by: `grep -c '\[TEST DATA\]'` = 7, every entry card tagged
+- [x] G3-11 — No clinical, therapeutic, or diagnostic language in shipped copy · traces_to: §4 non-goals · verified_by: regex returns only the disclaimer sentence
 
-**Design system**
-- [x] Itten palette defined once in `:root` and used consistently; no ad-hoc hex outside the token block. Was false at critic pass 2 — the hand-patched disclosure block hardcoded `#D8472B` ×3 and a translucent shadow; now uses `var(--vermillion)` and `var(--line)`, verified by grep.
-- [x] 28px grid, opaque hard `Npx Npx 0` shadows, no `border-radius`, no emoji — verified across the stylesheet and the patched block.
-- [x] Space Mono and Kalam are **actually loaded**, not merely declared in a fallback stack. Was false at critic pass 2 — no loader existed, so both silently fell back to Comic Sans / Courier for every reader. This was a constraint conflict, not a build defect: the build was told to ship self-contained with zero network calls, and "zero network" cannot coexist with "webfonts loaded" in a single file. **Resolved in favour of the locked design system** (CLAUDE.md §11), which outranks the self-contained instruction. Google Fonts loader added; verified via `document.fonts.check()` returning true for both families and `document.fonts` reporting them loaded, 2026-09-11. Fallback stacks retained so the file degrades rather than breaks offline; no other external request is made.
+**Design system — verified by grep**
+- [x] G3-12 — Itten palette defined once in `:root`; no ad-hoc hex outside the token block · traces_to: §8 constraints · verified_by: `grep -n '#D8472B'` returns only the `:root` definition
+- [x] G3-13 — 28px grid, opaque hard `Npx Npx 0` shadows, no `border-radius`, no emoji · traces_to: §8 · verified_by: `grep -c 'border-radius'` = 0; emoji scan clean
+- [x] G3-14 — Space Mono and Kalam are actually loaded, not merely declared · traces_to: §8, §9 tradeoff 3 · verified_by: `document.fonts.check()` true for both families
 
-**Testing — the boxes no amount of build polish closes**
-- [ ] SC-001 — Reaction test measuring #13a (semantic match) against StoryWriter's 70.37%. **Deferred to Tier 2** by explicit brief decision; structurally unmeasurable on pre-drawn doodles. Unchecked, not failed.
-- [ ] SC-002 — Same for #13b (affective register) against 70.97%. Deferred to Tier 2.
-- [ ] A moderated reaction test (StoryWriter Study 2 method) has actually been run, measuring #13a and #13b **separately**. **Open** — not commissioned. Per the brief's falsifiability table, #13b improving while #13a does not is a re-scope-or-kill, not a partial win.
-- [ ] Any usability or accessibility testing has been run with a real person. **Open** — zero participants, per the artifact's own disclosure. No contrast audit, no keyboard-nav pass, no screen-reader pass has been performed by a human.
+**Measurement**
+- [x] G3-15 — SC-003 (time to completed entry) is instrumented in the build · traces_to: §12 · verified_by: timer returned 1.8s on a live save; labelled on-screen as n=1 and not a finding
+- [ ] G3-16 — SC-001 measured: proportion describing their live-generated doodle as irrelevant (#13a) · traces_to: §12, `OPEN.md` H-01 · verified_by: test run — **DEFERRED to Tier 2; structurally unmeasurable on pre-drawn doodles**
+- [ ] G3-17 — SC-002 measured: proportion using negative/unsettling language (#13b) · traces_to: §12, `OPEN.md` H-01 · verified_by: test run — **DEFERRED to Tier 2**
 
-**Gate 3 verdict: 15 of 22 checked, 7 open — red, correctly.**
+**Accessibility — UXI-11..14, none verified**
+- [ ] G3-18 — WCAG AA contrast audited · traces_to: UXI-11 · verified_by: a contrast audit — **never run**
+- [ ] G3-19 — Full keyboard operation of capture, consent, render, discard · traces_to: UXI-12 · verified_by: a keyboard pass — **never run**
+- [ ] G3-20 — Every doodle carries a text alternative · traces_to: UXI-13 · verified_by: `alt`/`aria-label` on every doodle SVG — **not implemented**
+- [ ] G3-21 — No state conveyed by colour alone · traces_to: UXI-14 · verified_by: a review — **never run**
 
-*(Count computed by the same awk the gate script uses, not by hand:*
-`awk '/^## Acceptance Criteria/{flag=1;next} /^## /{flag=0} flag && /^- \[ \]/{c++} END{print c+0}' design.md`
-*. First draft of this line asserted "17 of 24" from memory and was wrong on both numbers — caught by running `check-gates.sh`, which reported 7 open against a claim of 7 open but a total of 24. The 47% rule applies to the file that describes the 47% rule.)*
+**Feels-like-a-drawer — added when `check-trace.sh` caught these as orphaned intents**
+- [x] G3-25 — No engagement mechanics: no streaks, no day counters, no notifications or reminders, no share or social affordance · traces_to: UXI-05 · verified_by: `grep -icE 'streak|day [0-9]+ of|notification|reminder'` = 0 **and** `grep -icE '>[^<]*\b(share|post|publish|send to)\b'` = 0. *(Corrected: the first version of this criterion included `badge` in the pattern and claimed 0. It returns 4 — all of them the Tier-1 fidelity badge, not gamification. The claim was true, the stated command was not. Third instance today of writing a command-and-expected-result without running it.)*
+- [x] G3-26 — An entry saves and remains complete without a doodle; nothing blocks or nags toward generation · traces_to: UXI-07 · verified_by: save path requires only non-empty text; no modal, prompt, or disabled state pushes the user to render
 
-The checked boxes are narrow, mechanical, and verified by execution or grep: consent-gating, text preservation, seed-data tagging, token compliance, and the six defects critic pass 2 caught. The seven open boxes split cleanly into two kinds, and the distinction is the useful part:
+**Open obligations**
+- [ ] G3-22 — Art. 9 consent copy reviewed by someone qualified · traces_to: §8, `OPEN.md` H-02 · verified_by: named reviewer — **open**
+- [ ] G3-23 — Retention/deletion SLA defined and sourced · traces_to: §8, `OPEN.md` H-03 · verified_by: a specified timing — **open; User Story 3 AS-2 must not be marked passing until then**
+- [ ] G3-24 — Any usability or accessibility testing run with a real person · traces_to: §12 · verified_by: participant count > 0 — **zero participants**
 
-- **Blocked on research that hasn't happened** — SC-001, SC-002, the reaction test, usability/accessibility testing, FR-006's review, FR-010's unsourced SLA. No build polish closes these. They stay open until someone does the work.
-- **A stated constraint conflict** — font loading, where two rules Beth set genuinely contradict each other and she owns the resolution.
+**15 of 24 checked, 9 open.** Count computed, not asserted:
+`awk '/^## Acceptance Criteria/{f=1;next} /^## /{f=0} f && /^- \[ \]/{c++} END{print c+0}' design.md`
 
-## Post-pass-2 remediation, 2026-09-11
-
-Critic pass 2 returned seven FAILs. **Five were introduced by the orchestrator's own hand-patches, not by the build agent** — the stale 57.1%, the un-propagated #13a/#13b split, the token drift, and (by omission) the describe-box contradiction and the readonly transcript left unreconciled with the corrected brief. All six code-level defects were fixed and re-verified by execution; the boxes above record which flipped and why.
-
-The seventh — font loading — is not a defect and was not "fixed." It is recorded as a conflict between two instructions.
-
-**The pattern worth keeping from this pass:** a hand-patch satisfies the requirement it was written for and leaves every *adjacent* claim untouched. The FR-011 disclosure was correct and the describe-box 300px below it said the opposite; the header carried the #13a/#13b split and the rail — the surface a stakeholder actually skims — carried the pre-split framing and a superseded number. Patching where the requirement points is not the same as patching everywhere the misreading lives.
+The nine open split into three kinds, and the distinction is the useful output: **four accessibility requirements nobody has verified** (G3-18..21 — the most fixable of the three, and the most quietly skipped), **two deferred metrics** that a pre-drawn build structurally cannot measure (G3-16/17), and **three human-owned obligations** (G3-22..24). No amount of build polish closes any of them.
