@@ -42,10 +42,23 @@ import re
 import os
 import sys
 
-ACCOUNTABLE_OWNER = "Beth Connor"      # role holder for this project
-RISK_FUNCTION = "legal / privacy (unassigned — see OPEN.md H-02)"
+def conf(key, default=""):
+    """Read a value from project.conf. The only project-specific input."""
+    try:
+        for line in open("project.conf", encoding="utf-8"):
+            m = re.match(rf'\s*{key}\s*=\s*"?([^"#\n]*)"?', line)
+            if m:
+                return m.group(1).strip()
+    except FileNotFoundError:
+        pass
+    return default
 
-GATES = [("ux.md", 1), ("vision.md", 2), ("design.md", 3)]
+
+ACCOUNTABLE_OWNER = conf("ACCOUNTABLE_OWNER", "UNSET — set it in project.conf")
+RISK_FUNCTION = conf("RISK_FUNCTION", "UNSET — set it in project.conf")
+
+GATES = [(conf("GATE_1", "ux.md"), 1), (conf("GATE_2", "vision.md"), 2),
+         (conf("GATE_3", "design.md"), 3)]
 CRIT = re.compile(r"^- \[([ x])\] (\S+) — (.*)$")
 
 # --- tier derivation. Order matters: first match wins, highest consequence first.
@@ -126,6 +139,15 @@ def main():
             total_open += 1
             t, why = tier_of(c["body"])
             buckets[t].append((gate, c["id"], why, c["body"][:88]))
+
+    n_parsed = sum(len(parse(p)) for p, _ in GATES)
+    if n_parsed == 0:
+        print("BROKEN — zero parsable acceptance criteria across all three gates.")
+        print("Expected: '- [x] G1-01 — <claim> · verified_by: <how>' under a")
+        print("'## Acceptance Criteria' heading. Reporting '0 open criteria, all")
+        print("clear' when nothing could be read is a false green, so this fails")
+        print("instead. Check GATE_1/2/3 in project.conf point at the right files.")
+        return 5
 
     print("=" * 74)
     print("TIERED SIGNATURE AUTHORITY — who signs to proceed past each open gate")

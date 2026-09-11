@@ -34,9 +34,19 @@
 #   4  broken or orphaned trace
 #   5  canonical intent spec missing
 
-INTENT="Intent Specs/doodle-journal.md"
+# --- project.conf is the single source of project-specific paths. Nothing in
+# --- this script is hardcoded to one project; see project.conf.
+[ -f ./project.conf ] && . ./project.conf
+INTENT="${INTENT_SPEC:-}"
 REGISTER="OPEN.md"
-DERIVED=("ux.md" "vision.md" "design.md")
+DERIVED=("${GATE_1:-ux.md}" "${GATE_2:-vision.md}" "${GATE_3:-design.md}")
+
+if [ -z "$INTENT" ]; then
+  echo "BROKEN — no INTENT_SPEC set in project.conf."
+  echo "Criteria carry traces_to: pointers; with no canonical document to point"
+  echo "at, none of them can be validated. That is a finding, not a skip."
+  exit 5
+fi
 
 if [ ! -f "$INTENT" ]; then
   echo "BROKEN — canonical intent spec not found at '$INTENT'."

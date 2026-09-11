@@ -26,8 +26,9 @@ SCORING:
                sets a BLOCKING verdict regardless of the total. Critical hazards
                do not average away.
 
-Every hazard below is grounded in a specific file or a specific measured defect.
-None are hypothetical. Sources are printed with each one.
+Hazards are READ FROM HAZARDS.md, not hardcoded here — the register is data a
+team can edit without touching a checker. Every row must name a real source; a
+hypothetical hazard belongs in a risk workshop, not in the register.
 
 Exit codes:
     0  ship-acceptable at this destination
@@ -71,102 +72,38 @@ def human_rows():
     return n
 
 
-def build(dest, nviol, nhuman):
-    """Return the hazard list for this destination.
+def load_hazards(dest):
+    """Read HAZARDS.md. The register is data, not code.
 
-    exposure is per-destination on purpose: an Art. 9 hazard has exposure 0 at an
-    internal demo with no real data, and 1.0 the moment a real person discloses.
+    The hazards used to be a literal list inside this script, which made it
+    unportable — every project would have had to edit the source — and it put
+    project content in a place nobody reviews. A hazard register is exactly the
+    kind of thing a team should be able to edit without touching a checker.
     """
-    D = DESTINATIONS.index(dest)  # 0 demo, 1 pilot, 2 production
-    H = []
-
-    H.append(dict(
-        id="RSK-01", kind="CLAIM",
-        what="The artifact is read as evidence the concept works. Its own numbers "
-             "(70.37% / 70.97%) are evidence AGAINST it, and they sit on the page "
-             "next to a working demo.",
-        exposure=[0.8, 0.6, 0.4][D], severity=3, floor=False,
-        source="prototypes/doodle-journal/SOURCES.md; README 'not a stand-alone "
-               "deliverable'; MC-04. The repo names this as the foreseeable misuse.",
-        mitigation="FidelityBadge above the fold, the red no-data panel, and never "
-                   "forwarding the HTML without its brief. Partially mitigated; the "
-                   "residual risk is a screenshot in a deck."))
-
-    H.append(dict(
-        id="RSK-02", kind="EXCLUSION",
-        what=f"{nviol} live accessibility/design violations, including no focus "
-             f"style anywhere and an unlabelled describe-input textarea. A "
-             f"keyboard or screen-reader user cannot reliably complete the core "
-             f"task.",
-        exposure=[0.5, 1.0, 1.0][D], severity=3, floor=True,
-        source="scripts/check-design.py (exit 6); T4 audit found the unlabelled "
-               "textarea, which no design.md criterion names.",
-        mitigation="FLOOR work. Not gated on problem validation. Fix before any "
-                   "destination that includes a real user."))
-
-    H.append(dict(
-        id="RSK-03", kind="LEGAL",
-        what="Inferring emotional state from a journal entry is GDPR Art. 9 "
-             "special-category processing. The consent copy is a UI pattern, not a "
-             "lawful Art. 9 disclosure, and no qualified reviewer has seen it.",
-        exposure=[0.0, 1.0, 1.0][D], severity=4, floor=True,
-        source="OPEN.md H-02; design.md G3-22; scout/05. Exposure is 0 at an "
-               "internal demo because the pipeline is mocked — no inference occurs.",
-        mitigation="Named reviewer sign-off, or descope inference. There is no "
-                   "engineering fix for a consent defect."))
-
-    H.append(dict(
-        id="RSK-04", kind="LEGAL",
-        what="No retention or deletion SLA exists for an entry, its doodle, or "
-             "derived inference data. Nothing states how long anything is kept.",
-        exposure=[0.0, 1.0, 1.0][D], severity=4, floor=True,
-        source="OPEN.md H-03; design.md G3-23; spec.md FR-010 NEEDS CLARIFICATION.",
-        mitigation="A specified, sourced timing. Blocks any real-data destination."))
-
-    H.append(dict(
-        id="RSK-05", kind="HARM",
-        what="A generated image misrepresents a person's own emotional disclosure "
-             "in a way they find unsettling. 70.97% used negative language; "
-             "participants reported actively avoiding images they found grotesque.",
-        exposure=[0.1, 0.9, 0.9][D], severity=3, floor=False,
-        source="SRC-001 PMC9810434, fetched and read. n=54.",
-        mitigation="Per-entry consent (UXI-10), one-tap discard (UXI-03), entry text "
-                   "always primary (UXI-01). These reduce the cost of the failure; "
-                   "they do not reduce its rate. Rate is R-01/R-02, untested."))
-
-    H.append(dict(
-        id="RSK-06", kind="INVESTMENT",
-        what="The core mechanism may simply not work. The nearest primary study "
-             "found 70.37% judged generated images irrelevant to their own "
-             "narrative, and the predicted-most-likely test outcome is "
-             "re-scope-or-kill.",
-        exposure=[0.7, 0.7, 0.7][D], severity=2, floor=False,
-        source="SRC-001; ux.md ds:6.3 kill criteria; OPEN.md R-01, R-02.",
-        mitigation="Run the reaction test before funding a build. This hazard is "
-                   "cheapest to retire and nothing is doing it — H-01 is unresolved."))
-
-    H.append(dict(
-        id="RSK-07", kind="DECISION",
-        what=f"{nhuman} decisions only a person can make are standing open. An "
-             f"agent or a team that proceeds past them has substituted a default "
-             f"for a decision nobody made.",
-        exposure=[0.6, 0.9, 1.0][D], severity=2, floor=False,
-        source="./check-blocked.sh (exit 2); OPEN.md HUMAN rows.",
-        mitigation="Answer them or record declining to. check-blocked.sh already "
-                   "detects this; nothing enforces it outside a speckit hook."))
-
-    H.append(dict(
-        id="RSK-08", kind="EVIDENCE",
-        what="58.6% of tagged claims are [A] or [?] — roughly twice the 30% "
-             "readiness threshold. For eng this is a change-risk map: the consent "
-             "string, the retention number and the whole generation pipeline are "
-             "all likely to move.",
-        exposure=[0.5, 0.8, 1.0][D], severity=2, floor=False,
-        source="briefs/doodle-journal.brief.md tag ledger, 17 of 29, grep-verified.",
-        mitigation="Build a seam wherever the evidence is thin. Do not hardcode a "
-                   "value that rests on an [A] claim."))
-
-    return H
+    if not os.path.isfile("HAZARDS.md"):
+        return None
+    col = {"internal-demo": 5, "pilot": 6, "production": 7}[dest]
+    out, inb = [], False
+    for line in open("HAZARDS.md", encoding="utf-8"):
+        if line.startswith("## Hazards"):
+            inb = True
+            continue
+        if inb and line.startswith("## "):
+            break
+        if not inb or not line.startswith("|"):
+            continue
+        f = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(f) < 10 or f[0] in ("id",) or set(f[0]) <= set("-"):
+            continue
+        try:
+            sev = int(f[2])
+            exp = float(f[col - 1])
+        except ValueError:
+            continue
+        out.append(dict(id=f[0], kind=f[1], severity=sev,
+                        floor=f[3].upper() == "FLOOR", exposure=exp,
+                        what=f[7], source=f[8], mitigation=f[9]))
+    return out
 
 
 def main():
@@ -177,9 +114,20 @@ def main():
         print("destination is a number waiting to be quoted in the wrong context.")
         return 2
 
-    nviol = live_violations()
-    nhuman = human_rows()
-    hz = build(dest, nviol, nhuman)
+    hz = load_hazards(dest)
+    if hz is None:
+        print("BROKEN — HAZARDS.md not found.")
+        print("The hazard register is data, not code. Create it with the strict")
+        print("table format, or this script has nothing to evaluate. An empty")
+        print("hazard register is a claim that nothing can go wrong.")
+        return 3
+    if not hz:
+        print("BROKEN — HAZARDS.md has no parsable rows.")
+        print("Zero hazards is reported as a failure on purpose.")
+        return 3
+    print(f"  {len(hz)} hazard(s) in the register · "
+          f"live checks: check-design.py reports {live_violations()} violation(s), "
+          f"check-blocked.sh reports {human_rows()} open HUMAN row(s)\n")
 
     print("=" * 74)
     print(f"RISK OF SHIPPING — destination: {dest.upper()}")
@@ -223,8 +171,12 @@ def main():
               f"{len(blocking)} critical hazard(s) reached:")
         for h in blocking:
             print(f"  {h['id']}  {h['kind']}")
-        print("\nBoth are legal, both are FLOOR, and neither has an engineering")
-        print("fix. They need a named reviewer and a specified retention timing.")
+        nfloor = sum(1 for h in blocking if h["floor"])
+        if nfloor:
+            print(f"\n{nfloor} of them are FLOOR — they hold whether or not the concept")
+            print("is right, and they are not gated on problem validation. Read each")
+            print("mitigation above: a hazard whose mitigation names a reviewer or a")
+            print("decision has no engineering fix at all.")
         return 9
 
     print(f"\nVERDICT: no critical hazard reached at {dest}.")

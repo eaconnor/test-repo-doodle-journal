@@ -44,10 +44,22 @@ import os
 import sys
 import subprocess
 
+def conf(key, default=""):
+    """Read a value from project.conf. The only project-specific input."""
+    try:
+        for line in open("project.conf", encoding="utf-8"):
+            m = re.match(rf'\s*{key}\s*=\s*"?([^"#\n]*)"?', line)
+            if m:
+                return m.group(1).strip()
+    except FileNotFoundError:
+        pass
+    return default
+
+
 GATES = [
-    ("ux.md", 1, "Are we solving the right problem?"),
-    ("vision.md", 2, "Are we making the right thing?"),
-    ("design.md", 3, "Are we making the thing right?"),
+    (conf("GATE_1", "ux.md"), 1, "Are we solving the right problem?"),
+    (conf("GATE_2", "vision.md"), 2, "Are we making the right thing?"),
+    (conf("GATE_3", "design.md"), 3, "Are we making the thing right?"),
 ]
 
 CRIT_RE = re.compile(r"^- \[([ x])\] (\S+) — (.*)$")
@@ -177,6 +189,18 @@ def main():
         tot_true += true_
         tot_fixable += len(open_mach)
         tot_human += len(open_human)
+
+    if tot_all == 0:
+        print("\nBROKEN — zero parsable acceptance criteria across all three gates.")
+        print("Expected rows of the form:")
+        print('  - [x] G1-01 — <claim> · traces_to: <id> · verified_by: <how>')
+        print("under a '## Acceptance Criteria' heading (a leading section number")
+        print("is fine). Zero criteria is reported as a FAILURE, never as a clean")
+        print("run: this script found nothing to score, and 'I found nothing' must")
+        print("never render as 'nothing is wrong'. That false-green is the exact")
+        print("failure this repo exists to document, and it happened here — the")
+        print("first port of this script crashed on a division by zero instead.")
+        return 5
 
     base = 100 * tot_true / tot_all
     ceil = 100 * (tot_true + tot_fixable) / tot_all

@@ -29,9 +29,14 @@
 #   0   all eng gates pass (warnings may still be printed)
 #   10  EG-1 failed — this build can harm a user. Hard stop.
 #   11  EG-2 failed — something is being built that traces to no stated intent.
+#   12  EG-1 UNEVALUATED — no build to lint. Not a pass: "we did not look" must
+#       never render as "we looked and it was fine".
 
-INTENT="Intent Specs/doodle-journal.md"
-BUILD="prototypes/doodle-journal/doodle-journal.html"
+# --- project.conf is the single source of project-specific paths. Nothing in
+# --- this script is hardcoded to one project; see project.conf.
+[ -f ./project.conf ] && . ./project.conf
+INTENT="${INTENT_SPEC:-}"
+BUILD="${BUILD:-}"
 HARM=0
 ROADMAP=0
 WARN=0
@@ -78,6 +83,14 @@ else
   echo "  SKIP  scripts/check-design.py not present — EG-1 cannot be evaluated."
   echo "        An unevaluated harm gate is a failed harm gate in CI. Treat as FAIL."
   HARM=1
+fi
+UNEVAL=0
+if [ "${code:-0}" -eq 5 ]; then
+  echo "  UNEVALUATED — no build to lint (BUILD unset, or it declares no design"
+  echo "        tokens). This is NOT a pass. An unevaluated harm gate must never"
+  echo "        read as a clear one, so this script exits 12 rather than 0."
+  echo "        Set BUILD in project.conf before EG-1 means anything."
+  UNEVAL=1
 fi
 
 # a11y items a static read cannot settle, so they are named not scored
@@ -236,6 +249,12 @@ fi
 if [ "$ROADMAP" -eq 1 ]; then
   echo "BLOCKED — EG-2. Something is being built that traces to no stated intent."
   exit 11
+fi
+if [ "$UNEVAL" -eq 1 ]; then
+  echo "UNEVALUATED — EG-1 could not be assessed (no build)."
+  echo "Every other gate passed, and that is not the same as safe. Exiting 12 so"
+  echo "CI cannot mistake 'we did not look' for 'we looked and it was fine'."
+  exit 12
 fi
 echo "Engineering gates pass. $WARN warning(s)."
 echo "Passing EG-1..EG-5 says this is safe, on-roadmap, maintainable, testable"

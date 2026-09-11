@@ -39,13 +39,66 @@ import re
 import sys
 import os
 
+
+def conf(key, default=""):
+    """Read a value from project.conf. The only project-specific input."""
+    try:
+        for line in open("project.conf", encoding="utf-8"):
+            m = re.match(rf'\s*{key}\s*=\s*"?([^"#\n]*)"?', line)
+            if m:
+                return m.group(1).strip()
+    except FileNotFoundError:
+        pass
+    return default
+
 # ---------------------------------------------------------------- palette
-PALETTE = {
-    "vermillion": "#D8472B", "ultramarine": "#1F3C96", "ochre": "#C99A2E",
-    "violet": "#5B3A7E", "green-earth": "#5E7A3F", "cadmium": "#E8B93A",
-    "ink": "#1a1612", "paper": "#efe7d6", "card": "#f7f0df",
-    "line": "#1a1612",  # --line: var(--ink)
-}
+# The palette is READ FROM THE BUILD'S OWN :root BLOCK, not hardcoded here.
+#
+# It used to be a literal dict of Itten values, which made this script
+# unportable: any other project would have had to edit the source to use it. It
+# also meant the script could disagree with the artifact it was linting — the
+# worst possible failure for a checker, because it would report confident
+# numbers about colours that were not on the page.
+#
+# Reading :root means the script is always measuring the actual tokens, and it
+# drops into any project whose stylesheet declares them. Tokens that alias
+# another token (`--line: var(--ink)`) are resolved transitively.
+PALETTE = {}
+
+# Names the contrast rules treat as the page/panel grounds. Overridable via
+# project.conf GROUND_TOKENS. If none of these exist, the lightest and darkest
+# declared tokens are used and that assumption is printed.
+DEFAULT_GROUNDS = ["paper", "card", "bg", "background", "surface", "canvas"]
+
+
+def load_palette(css, note):
+    """Fill PALETTE from the :root block. Returns the list of ground tokens."""
+    m = re.search(r":root\s*\{([^}]*)\}", css, re.S)
+    if not m:
+        note.append("no :root block found — colour rules cannot be evaluated")
+        return []
+    raw = {}
+    for decl in m.group(1).split(";"):
+        dm = re.match(r"\s*--([a-zA-Z0-9_-]+)\s*:\s*(.+)", decl)
+        if dm:
+            raw[dm.group(1)] = dm.group(2).strip()
+    # resolve hex directly; resolve var() aliases transitively
+    for _ in range(5):
+        for k, v in list(raw.items()):
+            hm = re.match(r"^(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})$", v)
+            if hm:
+                PALETTE[k] = hm.group(1)
+                continue
+            am = re.match(r"^var\(\s*--([a-zA-Z0-9_-]+)\s*\)$", v)
+            if am and am.group(1) in PALETTE:
+                PALETTE[k] = PALETTE[am.group(1)]
+    grounds = [g for g in DEFAULT_GROUNDS if g in PALETTE]
+    if not grounds and PALETTE:
+        by_lum = sorted(PALETTE.items(), key=lambda kv: luminance(kv[1]))
+        grounds = [by_lum[-1][0], by_lum[0][0]]
+        note.append(f"no conventional ground token found; assuming "
+                    f"'{grounds[0]}' and '{grounds[1]}' by luminance")
+    return grounds
 
 
 def _lin(c):
@@ -414,8 +467,11 @@ def check_engagement(src):
 
 # ================================================================ main
 def main():
-    target = sys.argv[1] if len(sys.argv) > 1 else \
-        "prototypes/doodle-journal/doodle-journal.html"
+    target = sys.argv[1] if len(sys.argv) > 1 else conf("BUILD")
+    if not target:
+        print("BROKEN — no BUILD set in project.conf and no path given.")
+        print("This script lints a real artifact; it has nothing to read.")
+        return 5
 
     if not os.path.isfile(target):
         print(f"BROKEN — no such file: {target}")
@@ -425,6 +481,14 @@ def main():
     src = load(target)
     css = style_blocks(src)
     css_rules = list(rules(css))
+
+    notes = []
+    grounds = load_palette(css, notes)
+    if not PALETTE:
+        print(f"BROKEN — no design tokens found in {target}.")
+        print("This script reads the palette from the build's own :root block so")
+        print("it is always measuring the real tokens. Declare them there.")
+        return 5
 
     check_contrast(css_rules)
     check_shadows(css)
@@ -437,7 +501,12 @@ def main():
     check_engagement(src)
 
     print(f"check-design.py — {target}")
-    print(f"{len(css_rules)} CSS rules parsed\n")
+    print(f"{len(css_rules)} CSS rules parsed · "
+          f"{len(PALETTE)} tokens read from :root · "
+          f"grounds: {', '.join(grounds) if grounds else 'none detected'}")
+    for n in notes:
+        print(f"  note: {n}")
+    print()
 
     if violations:
         print(f"=== {len(violations)} VIOLATION(S) ===\n")

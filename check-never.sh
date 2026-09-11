@@ -47,7 +47,11 @@
 # Optional argument: destination (internal-demo | pilot | production). Some never
 # events are scoped to a real user being present. Defaults to internal-demo.
 
+# --- project.conf is the single source of project-specific paths. Nothing in
+# --- this script is hardcoded to one project; see project.conf.
+[ -f ./project.conf ] && . ./project.conf
 DEST="${1:-internal-demo}"
+BUILD="${BUILD:-}"
 FIRED=0
 REPORTED=0
 
@@ -75,7 +79,7 @@ if [ -f OPEN.md ]; then
     hid=$(echo "$row" | awk -F'|' '{gsub(/ /,"",$2); print $2}')
     blocks=$(echo "$row" | awk -F'|' '{print $6}')
     for crit in $(echo "$blocks" | grep -oE 'G[123]-[0-9]+'); do
-      for f in ux.md vision.md design.md; do
+      for f in "${GATE_1:-ux.md}" "${GATE_2:-vision.md}" "${GATE_3:-design.md}"; do
         [ -f "$f" ] || continue
         if grep -qE "^- \[x\] $crit " "$f"; then
           echo "  FIRED  $crit is ticked in $f, but $hid is unresolved."
@@ -194,8 +198,8 @@ echo "      outside its consented purpose."
 echo "      Why never: purpose limitation is not a preference, and consent cannot"
 echo "      be granted retroactively by the team that wants the data."
 echo
-if [ -f prototypes/doodle-journal/doodle-journal.html ]; then
-  n=$(grep -c '\[TEST DATA\]' prototypes/doodle-journal/doodle-journal.html)
+if [ -n "$BUILD" ] && [ -f "$BUILD" ]; then
+  n=$(grep -c '\[TEST DATA\]' "$BUILD")
   echo "  $n [TEST DATA] tags present in the build."
   echo "  PARTIAL DETECTION ONLY. A script can confirm the tags exist; it cannot"
   echo "  confirm the content behind them is fictional. This never event is"
