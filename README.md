@@ -37,15 +37,17 @@ The exit codes differ on purpose, so a caller can tell "a box is unticked" from 
 
 ## Reading order
 
-1. `.specify/memory/constitution.md` — the three gates, the five-link enforcement chain, and this repo's honesty rules
-2. `scout/00-index.md` — evidence index; **read `scout/03` first**, it is load-bearing and it cuts against the concept
-3. `briefs/doodle-journal.brief.md` — the three-gate brief, 29 tagged claims, the falsifiability table, and the Critic Pass 1 resolutions
-4. `ux.md` — Gate 1 (2 of 6 boxes open, on purpose)
-5. `vision.md` — Gate 2 (2 of 6 boxes open) + Decision Log
-6. `design.md` — Gate 3 (written from the post-build critic)
-7. `spec.md` — the spec-kit-shaped view: prioritized stories, `FR-###`, `SC-###`
-8. `prototypes/doodle-journal/critic-pass-1.md` → `critic-pass-2.md` — the review record
-9. `prototypes/doodle-journal/doodle-journal.html` — the Tier 1 prototype. Open it directly in a browser; it is self-contained, with no network calls, no CDN links, and no model calls
+1. `Intent Specs/doodle-journal.md` — **canonical.** Start at §0 agent summary, then §5 UX intent
+2. `.specify/memory/constitution.md` — the three gates and the five-link enforcement chain
+3. `scout/00-index.md` — evidence index; **read `scout/03` first**, it is load-bearing and it cuts against the concept
+4. `briefs/doodle-journal.brief.md` — 29 tagged claims, the falsifiability table, the Critic Pass 1 resolutions
+5. `OPEN.md` — every unresolved thing, typed HUMAN / RESEARCH / ACCEPTED
+6. `ux.md` — Gate 1 derived checklist (8 of 10 checked)
+7. `vision.md` — Gate 2 derived checklist (9 of 11 checked)
+8. `design.md` — Gate 3 derived checklist (17 of 26 checked)
+9. `spec.md` — the spec-kit-shaped view: prioritized stories, `FR-###`, `SC-###`
+10. `prototypes/doodle-journal/critic-pass-1.md` → `critic-pass-2.md` — the review record
+11. `prototypes/doodle-journal/doodle-journal.html` — the Tier 1 prototype. Open it directly in a browser. No model call and no backend; it does load Space Mono and Kalam from Google Fonts, which is its only external request
 
 ## Prototype location
 
@@ -91,7 +93,7 @@ This is worth understanding rather than just running, because it is the subtlest
 
 ## Gate state
 
-Red, for real reasons. `./check-gates.sh` exits 1. `[A]`+`[?]` = **58.6%** of tagged claims (17 of 29, grep-verified) — nearly twice the 30% threshold. Nothing here is checked to make the script go green.
+Red, for real reasons. `./check-gates.sh` exits 1 — 2 open in Gate 1, 2 in Gate 2, 9 in Gate 3. `[A]`+`[?]` = **58.6%** of tagged claims (17 of 29, grep-verified) — nearly twice the 30% threshold. Nothing here is checked to make the script go green.
 
 ## How this repo deliberately differs from `test-repo-nav-update`
 
