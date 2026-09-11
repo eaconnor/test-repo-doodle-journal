@@ -140,6 +140,20 @@ def main():
             t, why = tier_of(c["body"])
             buckets[t].append((gate, c["id"], why, c["body"][:88]))
 
+    # A MISSING gate file must fail loudly. Summing parsed criteria across all
+    # three gates hid this: with GATE_1 typo'd, gates 2 and 3 still parsed, the
+    # total was non-zero, and the script reported a clean tiering with a whole
+    # gate silently absent. Same false-green class as the two fixed above —
+    # found by testing the guard instead of trusting it.
+    missing = [p for p, _ in GATES if not os.path.isfile(p)]
+    if missing:
+        print("BROKEN — gate file(s) not found: " + ", ".join(missing))
+        print("Check GATE_1/GATE_2/GATE_3 in project.conf. A missing gate file is")
+        print("a failure, not a gate with nothing in it: tiering the two that do")
+        print("exist would report a confident answer with a third of the criteria")
+        print("silently absent.")
+        return 5
+
     n_parsed = sum(len(parse(p)) for p, _ in GATES)
     if n_parsed == 0:
         print("BROKEN — zero parsable acceptance criteria across all three gates.")
