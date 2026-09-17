@@ -95,6 +95,46 @@ block, before the next `- **Optional hook**` bullet:
    workflow stage, and confirm the sentinel file exists — not just that the hook text was
    printed.
 
+## Testing performed, 2026-09-17 — and what it does and doesn't show
+
+**Bug 1 (silent skip on bad YAML) needs no behavioral test.** "Tell the user" versus "don't
+tell the user" are different outputs by construction — any agent following either text
+faithfully produces a different result. That fix stands on the wording alone.
+
+**Bug 2 (the "MUST actually invoke" sentence) was tested, and the result is weaker evidence
+than the diff made it look.** Four trials, two conditions × two designs, each a single fresh
+agent with no memory of the others:
+
+| design | condition | hook fired? |
+|---|---|---|
+| isolated (only the hook-check text, nothing else to do) | BEFORE (bug-present wording) | first run: no — confounded by a Skill-tool routing error, not the wording. Rerun with a plain bash command: **yes** |
+| isolated | AFTER (patched wording) | **yes**, both runs |
+| busy (a real planning task — Technical Context, Constitution Check against 3 principles, Phase 0/1 — with the hook check as one step among several) | BEFORE | **yes** — hook ran, and produced a genuinely substantive plan (caught a real accessibility tension the spec didn't name) |
+| busy | AFTER | **yes** — same |
+
+**All four trials ran the hook, regardless of wording.** That is not confirmation the patch
+works — it's a null result, and a null result from four single-agent trials is weak evidence
+either way. Two real limits on what this shows:
+
+- **Sample size is 1 per condition per design.** The original 12-agent finding this whole
+  repo is built on needed 12 agents across 6 tasks to get a reliable 6-of-6 signal — a
+  single compliant agent doesn't mean 12 would all comply. This could be masking real
+  variance the sample is too small to see.
+- **Every test agent was told, in its own prompt, that it was part of a controlled
+  experiment.** That is a real confound in the direction of *more* compliance, not less —
+  the opposite of how a production agent would actually encounter this text, mid-workflow,
+  with no framing that a hook check matters.
+
+**Conclusion, stated plainly rather than rounded up:** the "MUST actually invoke" sentence
+did not demonstrate a behavioral effect in four test-aware, single-agent trials. That is
+different from "the sentence is unnecessary" — it means this specific test design cannot
+distinguish the two wordings. The sentence costs nothing to keep (it cannot make compliance
+worse) and matches a documented failure mode in principle even where this test failed to
+reproduce it. **Recommendation: keep Bug 2 in the proposed patch, but do not cite this
+testing as proof it fixes anything — cite it as "tested, no effect detected, kept anyway
+because the downside is zero."** A real test would need the un-announced, multi-agent
+shape of the original 12-agent study, not a single agent told it's being measured.
+
 ## What this does not do
 
 Does not touch `acp-core-main-3`. Does not submit anything upstream. Does not resolve
